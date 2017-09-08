@@ -1,0 +1,49 @@
+#! /user/bin/env python
+
+import rospy
+from naoqi import ALProxy
+from std_msgs.msg import Float32MultiArray
+
+
+nao_ip = "127.0.0.1"
+port = 9559
+motion = ALProxy("ALMotion", nao_ip, port)
+posture = ALProxy("ALRobotPosture", nao_ip, port)
+
+
+def left_arm(data):
+    global left
+    left = any(j >= 0.1 for j in data.data)
+    while left:
+        if right:
+            break
+        motion.post.move(0, -0.2, 0)
+    motion.waitUntilMoveIsFinished()
+    return
+
+
+def right_arm(data):
+    global right
+    right = any(j >= 0.1 for j in data.data)
+    while right:
+        if left:
+            break
+        motion.post.move(0, 0.2, 0)
+    motion.waitUntilMoveIsFinished()
+
+
+def receive():
+    rospy.Subscriber("range_left_arm_upper", Float32MultiArray, left_arm)
+    rospy.Subscriber("range_right_arm_upper,", Float32MultiArray, right_arm)
+    rospy.spin()
+
+if __name__ == '__main__':
+    try:
+        motion.wakeUp()
+        posture.goToPosture("StandInit", 0.5)
+        rospy.init_node("two_arms_upper", anonymous=True)
+        motion.setStiffnesses("Body", 1.0)
+        motion.moveInit()
+        receive()
+    except rospy.ROSInterruptException:
+        pass

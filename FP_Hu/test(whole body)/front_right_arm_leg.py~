@@ -1,0 +1,65 @@
+#! /user/bin/env python
+
+import rospy
+from naoqi import ALProxy
+from std_msgs.msg import Float32MultiArray
+import time
+
+
+nao_ip = "192.168.0.100"
+#nao_ip = "127.0.0.1"
+port = 9559
+motion = ALProxy("ALMotion", nao_ip, port)
+posture = ALProxy("ALRobotPosture", nao_ip, port)
+left = False
+right = False
+forward = False
+backward = False
+
+
+def front_right_leg(data):
+    global left
+    global backward
+    backward = any(j >= 0.2 for j in data.data[0:31])
+    left = any(j >= 0.2 for j in data.data[32:44])
+    while left:
+        if right or forward or backward:
+            break
+        motion.post.move(0, -0.2, 0)
+    motion.waitUntilMoveIsFinished()
+    while backward:
+        if left or right or forward:
+            break
+        motion.post.move(-0.2, 0, 0)
+    motion.waitUntilMoveIsFinished()
+    return
+
+
+def right_arm(data):
+    global right
+    right = any(j >= 0.2 for j in data.data)
+    while right:
+        if left or forward or backward:
+            break
+        motion.post.move(0, 0.2, 0)
+    motion.waitUntilMoveIsFinished()
+    return
+
+
+def receive():
+    # Chest or Right Leg:
+    rospy.Subscriber("range_front_right_leg", Float32MultiArray, front_right_leg)
+    # Right arm:
+    rospy.Subscriber("range_right_arm", Float32MultiArray, right_arm)
+    rospy.spin()
+
+if __name__ == '__main__':
+    try:
+        motion.wakeUp()
+        posture.goToPosture("StandInit", 0.5)
+        rospy.init_node("front_right_arm_leg", anonymous=True)
+        motion.setStiffnesses("Body", 1.0)
+        motion.moveInit()
+        receive()
+    except rospy.ROSInterruptException:
+        pass

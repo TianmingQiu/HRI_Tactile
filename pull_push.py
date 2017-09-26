@@ -95,22 +95,3 @@ if __name__ == '__main__':
                 time.sleep(0.1)
                 rospy.loginfo("\n go left")
                 motion.post.moveTo(0, 0.1, 0)
-
-                motion.waitUntilMoveIsFinished()
-            elif error < -0.1:
-                print "actr"
-                time.sleep(0.1)
-                rospy.loginfo("\n go right")
-
-                motion.post.moveTo(0, -0.1, 0)
-
-                motion.waitUntilMoveIsFinished()
-
-
-
-
-
-
-
-
-

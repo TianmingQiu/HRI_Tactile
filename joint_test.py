@@ -4,7 +4,6 @@ import rospy
 import sys
 from naoqi import ALProxy
 from std_msgs.msg import Float32MultiArray
-from std_msgs.msg import String
 import time
 
 
@@ -13,33 +12,12 @@ nao_ip = "10.0.29.2"
 port = 9559
 motion = ALProxy("ALMotion", nao_ip, port)
 posture = ALProxy("ALRobotPosture", nao_ip, port)
-touch = 0
-left = 0
-right = 0
 
 
 
-def push_pull(data):
-    global left
-    global right
-    global error
-    arm_inside = 0
-    for i in range(0, 8):
-        arm_inside = arm_inside + data.data[i]
+def rew_print(data):
+    print data.data
 
-    arm_outside = 0
-    for i in range(8,16):
-        arm_outside = arm_outside + data.data[i]
-    error = arm_inside - arm_outside
-    if arm_inside > arm_outside:
-         left = 1
-    else:
-        right = 1
-
-
-def left_arm(data):
-    global touch
-    touch = any(j >= 0.1 for j in data.data)
 
 def joint_CB(data):
     #global joint_value
@@ -56,7 +34,7 @@ def getState():
     # run simultaneously.
     #rospy.init_node('listener', anonymous=True)
 
-    rospy.Subscriber("get_joint", String, joint_CB)
+    rospy.Subscriber("get_joint", Float32MultiArray, joint_CB)
 
     # spin() simply keeps python from exiting until this node is stopped
     rospy.spin()
@@ -122,8 +100,8 @@ if __name__ == '__main__':
     posture.goToPosture("StandInit", 0.5)
 
     rospy.init_node("central_node", anonymous = True)
-    #rospy.Subscriber("range_left_arm_upper", Float32MultiArray, left_arm)
-    #rospy.Subscriber("force_left_arm_upper", Float32MultiArray, push_pull)
+    rospy.Subscriber("cal_reward", Float32MultiArray, rew_print)
+    #rospy.Subscriber("force_left_arm_upper", Float32MultiArray, reward_CB)
 
     
     motion.setStiffnesses("Body", 1.0)
@@ -138,11 +116,3 @@ if __name__ == '__main__':
         time.sleep(0.1)
         getState()
         
-        '''if touch:
-            if error > 0.1:
-                print "actl"
-                time.sleep(0.1)
-                rospy.loginfo("\n go left")
-                motion.post.moveTo(0, 0.1, 0)'''
-
-    #

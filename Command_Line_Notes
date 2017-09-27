@@ -29,5 +29,10 @@
 	$ nmap --iflist
 	$ sudo netdiscover -r 192.168.0.0/24 -i eth1
 
+* Write a new pub_id node
+	1. create a new '.cpp' under catkin_ws/src/tum_skin_fiad/tum_skin_tests_fiad/src/Applications
+	2. modigy the 'CMakeLists.txt' on this directory
+	2. create a new '.launch' under catkin_ws/src/tum_skin_fiad/tum_skin_tests_fiad/launch/publish_ids
+
 
 

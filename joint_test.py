@@ -56,7 +56,7 @@ def getState():
     # run simultaneously.
     #rospy.init_node('listener', anonymous=True)
 
-    rospy.Subscriber("chatter", String, joint_CB)
+    rospy.Subscriber("get_joint", String, joint_CB)
 
     # spin() simply keeps python from exiting until this node is stopped
     rospy.spin()

@@ -15,8 +15,6 @@ posture = ALProxy("ALRobotPosture", nao_ip, port)
 
 
 
-def rew_print(data):
-    print data.data
 
 
 def joint_CB(data):

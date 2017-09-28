@@ -12,7 +12,10 @@ port = 9559
 motion = ALProxy("ALMotion", nao_ip, port)
 
 def joint_pub():
-    pub = rospy.Publisher('get_joint', Float32MultiArray,queue_size = 1)
+    pub = rospy.Publisher('get_joint', String, queue_size = 10)
+    rospy.init_node('joint_pub', anonymous=False)
+    rate = rospy.Rate(10) # 10hz
+    '''pub = rospy.Publisher('get_joint', Float32MultiArray, queue_size = 1)
     rospy.init_node('joint_pub', anonymous=True)
     rate = rospy.Rate(10) # 10hz
     mat = Float32MultiArray()
@@ -22,10 +25,10 @@ def joint_pub():
     mat.layout.dim[1].label = "width"
     mat.layout.dim[0].size = 1
     mat.layout.dim[1].size = 1
-    mat.layout.dim[0].stride = 1*1
-    mat.layout.dim[1].stride = 1
+    mat.layout.dim[0].stride = 1.0*1.0
+    mat.layout.dim[1].stride = 1.0
     mat.layout.data_offset = 0
-    mat.data = [0]
+    mat.data = [0]'''
 
     # get joint value method: http://doc.aldebaran.com/1-14/naoqi/motion/control-joint-api.html#ALMotionProxy::getAngles__AL::ALValueCR.bCR
     # The names of differnt joints: http://doc.aldebaran.com/1-14/naoqi/motion/control-joint.html
@@ -36,8 +39,10 @@ def joint_pub():
 
     while not rospy.is_shutdown():
         sensorAngles = motion.getAngles(names, useSensors)
-        mat.data[0] = sensorAngles
+        #mat.data[0] = sensorAngles
         #rospy.loginfo(mat.data)
+        mat = str(sensorAngles)
+        rospy.loginfo(mat)
         pub.publish(mat)
         rate.sleep()
 
@@ -45,4 +50,4 @@ if __name__ == '__main__':
     try:
         joint_pub()
     except rospy.ROSInterruptException:
-        pass
+        rospy.loginfo("GoForward node terminated.")

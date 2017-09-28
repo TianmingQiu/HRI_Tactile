@@ -1,4 +1,11 @@
-# Skin
+# HRI Tactile Project
+
+## Overview
+
+Base on NAO and artificial skin
+
+***
+## Appendix
 
 * http://wiki.ros.org/nao  这个是nao的一些基本的package，可以看一下；
 

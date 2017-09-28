@@ -11,9 +11,10 @@ nao_ip = "10.0.29.2"
 port = 9559
 motion = ALProxy("ALMotion", nao_ip, port)
 
-def joint_pub():
-    pub = rospy.Publisher('get_joint', String, queue_size = 10)
-    rospy.init_node('joint_pub', anonymous=False)
+def pubState():
+    pub = rospy.Publisher('get_state', String, queue_size = 10)
+    #pub = rospy.Publisher('get_joint', String, queue_size = 10)
+    rospy.init_node('state_pub', anonymous=False)
     rate = rospy.Rate(10) # 10hz
     '''pub = rospy.Publisher('get_joint', Float32MultiArray, queue_size = 1)
     rospy.init_node('joint_pub', anonymous=True)
@@ -32,22 +33,28 @@ def joint_pub():
 
     # get joint value method: http://doc.aldebaran.com/1-14/naoqi/motion/control-joint-api.html#ALMotionProxy::getAngles__AL::ALValueCR.bCR
     # The names of differnt joints: http://doc.aldebaran.com/1-14/naoqi/motion/control-joint.html
-    # Also, the name could be "Body", "RArm"
-    names         = "LShoulderPitch"
-    useSensors  = True
+    # Also, the name could be "Body", "RArm", "RElbowYaw"
+    #names         = "LShoulderPitch"
+    #useSensors  = True
     
 
     while not rospy.is_shutdown():
-        sensorAngles = motion.getAngles(names, useSensors)
-        #mat.data[0] = sensorAngles
-        #rospy.loginfo(mat.data)
-        mat = str(sensorAngles)
+        theta1 = motion.getAngles("LShoulderPitch", True)
+        theta2 = motion.getAngles("RElbowYaw",      True)
+        angle = theta1+theta2
+        # mat.data[0] = sensorAngles
+        # rospy.loginfo(mat.data)
+        mat = str(theta1[0])
+        mat2 = str(theta2[0])
         rospy.loginfo(mat)
-        pub.publish(mat)
+        #rospy.loginfo(mat2)
+        # rospy.loginfo(type(mat)
+        pub.publish(mat) # later change here publish dierect the state number!!!!!!
+        #pub.publish(mat2)
         rate.sleep()
 
 if __name__ == '__main__':
     try:
-        joint_pub()
+        pubState()
     except rospy.ROSInterruptException:
         rospy.loginfo("GoForward node terminated.")

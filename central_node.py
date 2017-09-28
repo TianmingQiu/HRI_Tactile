@@ -52,7 +52,7 @@ class ENV():
         # run simultaneously.
         #rospy.init_node('listener', anonymous=True)
 
-        rospy.Subscriber("get_joint", String, self.joint_CB)
+        rospy.Subscriber("get_state", String, self.joint_CB)
 
         # spin() simply keeps python from exiting until this node is stopped
         #rospy.spin()
@@ -77,8 +77,10 @@ if __name__ == '__main__':
             time.sleep(0.1)
             rew = env.calReward()
             state = env.getState()
+            state = float(state)
             print rew
             print state
+            print type(state)
             
 
     except rospy.ROSInterruptException:

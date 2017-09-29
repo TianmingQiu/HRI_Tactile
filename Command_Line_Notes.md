@@ -3,23 +3,26 @@
 
 - launch skin:
 ```
-	$ roscore
-	$ roslaunch tum_skin_tests_fiad tum_skin_driver_fiad_tsu.launch
-		after successful launch: clear offsets; store offsets  
-	$ roslaunch tum_skin_tests_fiad pub_left_arm.launch
+$ roscore
+$ roslaunch tum_skin_tests_fiad tum_skin_driver_fiad_tsu.launch
 ```
+after successful launch: ``clear offsets; store offsets``
+```
+$ roslaunch tum_skin_tests_fiad pub_left_arm.launch
+```
+
 
 - run NAO (* check the nao's ip on 10.0.29.1(wireless router))
 ```
-	$ roscore
-	$ roslaunch nao_bringup nao_full_py.launch nao_ip:=10.0.29.2 roscore_ip:=127.0.0.1
-	$ rosservice call /body_stiffness/enable "{}"
+$ roscore
+$ roslaunch nao_bringup nao_full_py.launch nao_ip:=10.0.29.2 roscore_ip:=127.0.0.1
+$ rosservice call /body_stiffness/enable "{}"
 ```
 
 - simulation rviz
 ```
-	$ rosrun tf static_transform_publisher 0 0 0 0 0 0 1 map my_frame 10
-	$ rosrun rviz rviz
+$ rosrun tf static_transform_publisher 0 0 0 0 0 0 1 map my_frame 10
+$ rosrun rviz rviz
 ```
 
 - Transfer package to my laptop:

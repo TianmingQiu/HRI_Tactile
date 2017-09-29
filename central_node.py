@@ -68,8 +68,13 @@ class ENV():
         
 
 if __name__ == '__main__':
+    motion.wakeUp()
+    #posture.goToPosture("StandInit", 0.5)
     rospy.init_node('central_node', anonymous = False)
     # rospy.Subscriber("force_left_arm_upper", Float32MultiArray, reward_CB)
+    #motion.setStiffnesses("Body", 1.0)
+    #motion.moveInit()
+
     env = ENV()
     try:
         #rospy.spin()

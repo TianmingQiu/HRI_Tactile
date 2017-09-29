@@ -39,13 +39,13 @@ def pubState():
     
 
     while not rospy.is_shutdown():
-        theta1 = motion.getAngles("LShoulderPitch", True)
-        theta2 = motion.getAngles("RElbowYaw",      True)
-        angle = theta1+theta2
+        theta1 = motion.getAngles("RElbowRoll", True)
+        #theta2 = motion.getAngles("RElbowYaw",      True)
+        #angle = theta1+theta2
         # mat.data[0] = sensorAngles
         # rospy.loginfo(mat.data)
-        mat = str(theta1[0])
-        mat2 = str(theta2[0])
+        mat = str(theta1)
+        #mat2 = str(theta2[0])
         rospy.loginfo(mat)
         #rospy.loginfo(mat2)
         # rospy.loginfo(type(mat)

@@ -22,7 +22,7 @@ def pubState():
     # Also, the name could be "Body", "RArm", "RElbowYaw"
 
     while not rospy.is_shutdown():
-        theta1 = motion.getAngles("RElbowRoll", True)
+        theta1 = motion.getAngles("Body", True)
         theta2 = motion.getAngles("RElbowYaw", True)
         #angle = theta1+theta2
         # mat.data[0] = sensorAngles

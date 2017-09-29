@@ -55,7 +55,7 @@ if __name__ == '__main__':
     motion.openHand('RHand')
     time.sleep(2)
     motion.closeHand('RHand')
-    flag = 10
+    '''flag = 10
     angle = 0.2
     time.sleep(10)
     while flag != 0:
@@ -63,7 +63,7 @@ if __name__ == '__main__':
 
         motion.setAngles('RElbowRoll', [angle], fractionMaxSpeed)
         flag = flag - 1
-        time.sleep(1.5)
+        time.sleep(1.5)'''
 
 
     #motion.setStiffnesses("Body", 1.0)

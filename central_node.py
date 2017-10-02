@@ -8,14 +8,15 @@
 
 import rospy
 import sys
-from std_msgs.msg import String
-from std_msgs.msg import Float32MultiArray
 from naoqi import ALProxy
 import time
 import tensorflow as tf 
 import numpy as np 
 import random
 from collections import deque
+import roslib; roslib.load_manifest('numpy_tutorial')
+from rospy_tutorials.msg import Floats
+import math
 
 nao_ip = "10.0.29.2"
 port = 9559
@@ -25,9 +26,13 @@ posture = ALProxy("ALRobotPosture", nao_ip, port)
 class ENV():
     def __init__(self):
         self.reward = 0
-        self.state = 0
+        self.joint = (0,0)
         self.state_dim = 2
         self.action_dim = 4
+
+        #operator = {'1': self.ShoulderF,'2': self.ShoulderB, '3': self.ElbowF, '4': self.ElbowB}
+
+
 
     def calReward(self):
         rospy.Subscriber("force_hand", Float32MultiArray, self.reward_CB)
@@ -41,12 +46,14 @@ class ENV():
         self.reward = self.reward + 5 * (data.data[0] + data.data[1] + data.data[9] + data.data[11])
 
 
-    def getState(self):
-        rospy.Subscriber("get_state", String, self.state_CB)
-        return self.state
+    def getJoint(self):
+        rospy.Subscriber("floats", Floats, self.joint_CB)
+        return self.joint
 
-    def state_CB(self, data):
-        self.state = data.data
+    def joint_CB(self, data):
+        self.joint = data.data
+
+
 
 # ------------------------------------
 # Hyper Parameters for DQN
@@ -103,7 +110,7 @@ class DQN():
     def create_training_method(self):
         self.action_input = tf.placeholder("float",[None,self.action_dim]) # one hot presentation
         self.y_input = tf.placeholder("float",[None])
-        Q_action = tf.reduce_sum(tf.mul(self.Q_value,self.action_input),reduction_indices = 1)
+        Q_action = tf.reduce_sum(tf.multiply(self.Q_value,self.action_input),reduction_indices = 1)
         self.cost = tf.reduce_mean(tf.square(self.y_input - Q_action))
         tf.scalar_summary("loss",self.cost)
         global merged_summary_op
@@ -180,6 +187,47 @@ class DQN():
         return tf.Variable(initial)
 
 
+def Act(instruct, joint):
+    
+    if instruct == 1:
+        ShoulderF(joint)
+    elif instruct == 2:
+        ShoulderB(joint)
+    elif instruct == 3:
+        ElbowF(joint)
+    elif instruct == 4:
+        ElbowB(joint)
+    print 'finish action'
+
+def ShoulderF(joint):
+    new_angle = joint[0] + 0.15
+    motion.setAngles("RShoulderRoll", new_angle, 0.2)
+
+def ShoulderB(joint):
+    new_angle = joint[0] - 0.15
+    motion.setAngles("RShoulderRoll", new_angle, 0.2)
+
+def ElbowF(joint):
+    new_angle = joint[1] + 0.15
+    motion.setAngles("RElbowRoll", new_angle, 0.2)
+
+def ElbowB(joint):
+    new_angle = joint[1] - 0.15
+    motion.setAngles("RElbowRoll", new_angle, 0.2)
+
+def calState(joint):
+    a = joint[0]
+    b = joint[1]
+    a0 = 0.211
+    b0 = 0.833
+    print a,b
+    # [0.21932005882263184, 0.8268680572509766]
+    state = 50 * round((a - a0) / 0.015) + round((b - b0) / 0.015) + 1
+    #state = int(state)
+    return state
+
+
+
 
 
 def RobotInit():
@@ -197,7 +245,7 @@ def RobotInit():
     motion.openHand('RHand')
     time.sleep(2)
     motion.closeHand('RHand')
-    time.sleep(5)
+    
 
 
 # ---------------------------------------------------------
@@ -206,7 +254,7 @@ EPISODE = 10000 # Episode limitation
 STEP = 300 # Step limitation in an episode
 TEST = 10 # The number of experiment test every 100 episode
 
-def main():
+'''def main():
     # initialize OpenAI Gym env and dqn agent
     env = gym.make(ENV_NAME)
     agent = DQN(env)
@@ -217,7 +265,7 @@ def main():
         # Train 
         for step in xrange(STEP):
             action = agent.egreedy_action(state) # e-greedy action for train
-            next_state,reward,done,_ = env.step(action)
+            next_state,reward,done,_ = env.step(action) # these three results can be calculate independently
             # Define reward for agent
             reward_agent = -1 if done else 0.1
             agent.perceive(state,action,reward,next_state,done)
@@ -252,7 +300,7 @@ def main():
             total_reward += reward
             if done:
                 break
-    env.monitor.close()
+    env.monitor.close()'''
 
 '''if __name__ == '__main__':
     main()'''
@@ -261,19 +309,27 @@ if __name__ == '__main__':
     rospy.init_node('central_node', anonymous = False)
     RobotInit()
     env = ENV()
-    agent = DQN(env)
+    #agent = DQN(env)
 
     try:
-        #rospy.spin()
+
         while not rospy.is_shutdown():
-            time.sleep(0.1)
-            #rew = env.calReward()
-            state = env.getState()
-            state = float(state)
-            #print rew
-            print state
-            #print type(state)
+            time.sleep(2)
+            joints = env.getJoint()
+            print joints
+            time.sleep(2)
+            act = random.randrange(1,5,1)
+            print act
+            joints = env.getJoint()
             
+            Act(act,joints)
+            print "actin end main"
+            time.sleep(2)
+            joints = env.getJoint()
+            state = calState(joints)
+            print state
+            time.sleep(1)
+
 
     except rospy.ROSInterruptException:
         pass

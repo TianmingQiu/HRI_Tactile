@@ -30,14 +30,10 @@ class ENV():
         self.state_dim = 2
         self.action_dim = 4
 
-        #operator = {'1': self.ShoulderF,'2': self.ShoulderB, '3': self.ElbowF, '4': self.ElbowB}
-
-
 
     def calReward(self):
         rospy.Subscriber("force_hand", Float32MultiArray, self.reward_CB)
         return self.reward
-
     def reward_CB(self, data):
         self.reward = 0
         # calculate reward according to skin cell with different weightings
@@ -49,7 +45,6 @@ class ENV():
     def getJoint(self):
         rospy.Subscriber("floats", Floats, self.joint_CB)
         return self.joint
-
     def joint_CB(self, data):
         self.joint = data.data
 
@@ -187,7 +182,7 @@ class DQN():
         return tf.Variable(initial)
 
 
-def Act(instruct, joint):
+'''def Act(instruct, joint):
     
     if instruct == 1:
         ShoulderF(joint)
@@ -197,22 +192,35 @@ def Act(instruct, joint):
         ElbowF(joint)
     elif instruct == 4:
         ElbowB(joint)
-    print 'finish action'
+    print 'finish action'  '''
+
+def ActPerfm(act_cmd, joint)
+    IsSafe = (joint[0] < 0.32) and (joint[0] > -1.3) and (joint[1] < 1.54) and (joint[1] > 0.035) #this range is wrong
+    if IsSafe:
+        return {
+            '1': ShoulderF(joint),
+            '2': ShoulderB(joint),
+            '3': ElbowF(joint),
+            '4': ElbowB(joint),
+        }[act_cmd]
+        
+    else:
+        print "Unsafe! Done!"
 
 def ShoulderF(joint):
-    new_angle = joint[0] + 0.15
+    new_angle = joint[0] + 0.1
     motion.setAngles("RShoulderRoll", new_angle, 0.2)
 
 def ShoulderB(joint):
-    new_angle = joint[0] - 0.15
+    new_angle = joint[0] - 0.1
     motion.setAngles("RShoulderRoll", new_angle, 0.2)
 
 def ElbowF(joint):
-    new_angle = joint[1] + 0.15
+    new_angle = joint[1] + 0.1
     motion.setAngles("RElbowRoll", new_angle, 0.2)
 
 def ElbowB(joint):
-    new_angle = joint[1] - 0.15
+    new_angle = joint[1] - 0.1
     motion.setAngles("RElbowRoll", new_angle, 0.2)
 
 def calState(joint):
@@ -222,7 +230,7 @@ def calState(joint):
     b0 = 0.833
     print a,b
     # [0.21932005882263184, 0.8268680572509766]
-    state = 50 * round((a - a0) / 0.015) + round((b - b0) / 0.015) + 1
+    state = 8 * round((a0 - a) / 0.1) + round((b0 - b) / 0.1) + 1
     #state = int(state)
     return state
 
@@ -319,10 +327,10 @@ if __name__ == '__main__':
             print joints
             time.sleep(2)
             act = random.randrange(1,5,1)
-            print act
+            print act_cmd
             joints = env.getJoint()
             
-            Act(act,joints)
+            ActPerfm(str(act_cmd),joints)
             print "actin end main"
             time.sleep(2)
             joints = env.getJoint()

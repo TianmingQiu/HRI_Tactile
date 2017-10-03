@@ -28,7 +28,7 @@ def pubState():
         theta2 = motion.getAngles("RElbowRoll", True)
         angle = theta1+theta2
         rospy.loginfo(angle)
-        pub.publish(angle)
+        pub.publish(angle) # type(angle) = list
         rate.sleep()
 
 if __name__ == '__main__':

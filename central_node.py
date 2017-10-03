@@ -23,9 +23,28 @@ port = 9559
 motion = ALProxy("ALMotion", nao_ip, port)
 posture = ALProxy("ALRobotPosture", nao_ip, port)
 
+def RobotInit():
+    motion.wakeUp()
+    posture.goToPosture("Crouch", 1.0)
+    motion.waitUntilMoveIsFinished()
+    print "Move is finished" # should be considered and checked !!!!!!
+    names  = ["Body"]
+    angles  = [-0.038392066955566406, 0.1349501609802246, 1.1964781284332275, 0.07512402534484863, -1.4926238059997559, -1.3391400575637817, 0.11500811576843262, 0.029999971389770508, -0.25766992568969727, -0.09506607055664062, -0.9694461822509766, 2.086198091506958, -1.168950080871582, 0.07367396354675293, -0.25766992568969727, 0.10128593444824219, -0.9342479705810547, 2.0663399696350098, -1.186300277709961, -0.07205605506896973, -0.309826135635376, 0.24233007431030273, 0.06131792068481445, 0.8544800281524658, 1.5983860492706299, 0.17799997329711914]
+    fractionMaxSpeed  = 0.2
+    time.sleep(1)
+    motion.setAngles(names, angles, fractionMaxSpeed)
+
+    time.sleep(1)
+    motion.openHand('RHand')
+    time.sleep(2)
+    motion.closeHand('RHand')
+    time.sleep(1)
+
+
 class ENV():
     def __init__(self):
         self.reward = 0
+        self.state = 1
         self.joint = (0,0)
         self.state_dim = 2
         self.action_dim = 4
@@ -47,6 +66,46 @@ class ENV():
         return self.joint
     def joint_CB(self, data):
         self.joint = data.data
+
+    def ActPerfm(self, act_cmd, joint):
+        IsSafe = (self.joint[0] < 0.32) and (self.joint[0] > -1.3) and (self.joint[1] < 1.54) and (self.joint[1] > 0.035) #this range is wrong
+        if IsSafe:
+            return {
+                '1': self.ShoulderF(joint),
+                '2': self.ShoulderB(joint),
+                '3': self.ElbowF(joint),
+                '4': self.ElbowB(joint),
+            }[act_cmd]
+            
+        else:
+            print "Unsafe! Done!"
+
+    def ShoulderF(self, joint):
+        new_angle = self.joint[0] + 0.1
+        motion.setAngles("RShoulderRoll", new_angle, 0.2)
+
+    def ShoulderB(self, joint):
+        new_angle = self.joint[0] - 0.1
+        motion.setAngles("RShoulderRoll", new_angle, 0.2)
+
+    def ElbowF(self, joint):
+        new_angle = self.joint[1] + 0.1
+        motion.setAngles("RElbowRoll", new_angle, 0.2)
+
+    def ElbowB(self, joint):
+        new_angle = self.joint[1] - 0.1
+        motion.setAngles("RElbowRoll", new_angle, 0.2)
+
+    def calState(self, joint):
+        a = self.joint[0]
+        b = self.joint[1]
+        a0 = 0.211
+        b0 = 0.833
+        print a,b
+        # [0.21932005882263184, 0.8268680572509766]
+        self.state = 8 * round((a0 - a) / 0.1) + round((b0 - b) / 0.1) + 1
+        #state = int(state)
+        return self.state
 
 
 
@@ -80,10 +139,10 @@ class DQN():
         self.saver = tf.train.Saver()
         checkpoint = tf.train.get_checkpoint_state("saved_networks")
         if checkpoint and checkpoint.model_checkpoint_path:
-                self.saver.restore(self.session, checkpoint.model_checkpoint_path)
-                print "Successfully loaded:", checkpoint.model_checkpoint_path
+            self.saver.restore(self.session, checkpoint.model_checkpoint_path)
+            print "Successfully loaded:", checkpoint.model_checkpoint_path
         else:
-                print "Could not find old network weights"
+            print "Could not find old network weights"
 
         global summary_writer
         summary_writer = tf.train.SummaryWriter('~/logs',graph=self.session.graph)
@@ -182,78 +241,12 @@ class DQN():
         return tf.Variable(initial)
 
 
-'''def Act(instruct, joint):
-    
-    if instruct == 1:
-        ShoulderF(joint)
-    elif instruct == 2:
-        ShoulderB(joint)
-    elif instruct == 3:
-        ElbowF(joint)
-    elif instruct == 4:
-        ElbowB(joint)
-    print 'finish action'  '''
-
-def ActPerfm(act_cmd, joint)
-    IsSafe = (joint[0] < 0.32) and (joint[0] > -1.3) and (joint[1] < 1.54) and (joint[1] > 0.035) #this range is wrong
-    if IsSafe:
-        return {
-            '1': ShoulderF(joint),
-            '2': ShoulderB(joint),
-            '3': ElbowF(joint),
-            '4': ElbowB(joint),
-        }[act_cmd]
-        
-    else:
-        print "Unsafe! Done!"
-
-def ShoulderF(joint):
-    new_angle = joint[0] + 0.1
-    motion.setAngles("RShoulderRoll", new_angle, 0.2)
-
-def ShoulderB(joint):
-    new_angle = joint[0] - 0.1
-    motion.setAngles("RShoulderRoll", new_angle, 0.2)
-
-def ElbowF(joint):
-    new_angle = joint[1] + 0.1
-    motion.setAngles("RElbowRoll", new_angle, 0.2)
-
-def ElbowB(joint):
-    new_angle = joint[1] - 0.1
-    motion.setAngles("RElbowRoll", new_angle, 0.2)
-
-def calState(joint):
-    a = joint[0]
-    b = joint[1]
-    a0 = 0.211
-    b0 = 0.833
-    print a,b
-    # [0.21932005882263184, 0.8268680572509766]
-    state = 8 * round((a0 - a) / 0.1) + round((b0 - b) / 0.1) + 1
-    #state = int(state)
-    return state
 
 
 
 
 
-def RobotInit():
-    motion.wakeUp()
-    posture.goToPosture("Crouch", 1.0)
-    motion.waitUntilMoveIsFinished()
-    print "Move is finished" # should be considered and checked !!!!!!
-    names  = ["Body"]
-    angles  = [-0.038392066955566406, 0.1349501609802246, 1.1964781284332275, 0.07512402534484863, -1.4926238059997559, -1.3391400575637817, 0.11500811576843262, 0.029999971389770508, -0.25766992568969727, -0.09506607055664062, -0.9694461822509766, 2.086198091506958, -1.168950080871582, 0.07367396354675293, -0.25766992568969727, 0.10128593444824219, -0.9342479705810547, 2.0663399696350098, -1.186300277709961, -0.07205605506896973, -0.309826135635376, 0.24233007431030273, 0.06131792068481445, 0.8544800281524658, 1.5983860492706299, 0.17799997329711914]
-    fractionMaxSpeed  = 0.2
-    time.sleep(1)
-    motion.setAngles(names, angles, fractionMaxSpeed)
 
-    time.sleep(1)
-    motion.openHand('RHand')
-    time.sleep(2)
-    motion.closeHand('RHand')
-    
 
 
 # ---------------------------------------------------------
@@ -326,17 +319,20 @@ if __name__ == '__main__':
             joints = env.getJoint()
             print joints
             time.sleep(2)
-            act = random.randrange(1,5,1)
+            act_cmd = random.randrange(1,5,1)
             print act_cmd
             joints = env.getJoint()
             
-            ActPerfm(str(act_cmd),joints)
+            env.ActPerfm(str(act_cmd),joints)
             print "actin end main"
             time.sleep(2)
             joints = env.getJoint()
-            state = calState(joints)
+            state = env.calState(joints)
             print state
             time.sleep(1)
+            print "done?"
+            something = raw_input()
+            print "thanks for giving me " + something
 
 
     except rospy.ROSInterruptException:

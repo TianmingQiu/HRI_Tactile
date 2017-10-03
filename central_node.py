@@ -23,14 +23,14 @@ port = 9559
 motion = ALProxy("ALMotion", nao_ip, port)
 posture = ALProxy("ALRobotPosture", nao_ip, port)
 
+
 def RobotInit():
     motion.wakeUp()
     posture.goToPosture("Crouch", 1.0)
     motion.waitUntilMoveIsFinished()
-    print "Move is finished" # should be considered and checked !!!!!!
     names  = ["Body"]
     angles  = [-0.038392066955566406, 0.1349501609802246, 1.1964781284332275, 0.07512402534484863, -1.4926238059997559, -1.3391400575637817, 0.11500811576843262, 0.029999971389770508, -0.25766992568969727, -0.09506607055664062, -0.9694461822509766, 2.086198091506958, -1.168950080871582, 0.07367396354675293, -0.25766992568969727, 0.10128593444824219, -0.9342479705810547, 2.0663399696350098, -1.186300277709961, -0.07205605506896973, -0.309826135635376, 0.24233007431030273, 0.06131792068481445, 0.8544800281524658, 1.5983860492706299, 0.17799997329711914]
-    fractionMaxSpeed  = 0.2
+    fractionMaxSpeed  = 0.1
     time.sleep(1)
     motion.setAngles(names, angles, fractionMaxSpeed)
 
@@ -38,7 +38,8 @@ def RobotInit():
     motion.openHand('RHand')
     time.sleep(2)
     motion.closeHand('RHand')
-    time.sleep(1)
+    time.sleep(5)
+    print "Ready!"
 
 
 class ENV():
@@ -68,43 +69,52 @@ class ENV():
         self.joint = data.data
 
     def ActPerfm(self, act_cmd, joint):
-        IsSafe = (self.joint[0] < 0.32) and (self.joint[0] > -1.3) and (self.joint[1] < 1.54) and (self.joint[1] > 0.035) #this range is wrong
+        IsSafe = (self.joint[0] < 0.211) and (self.joint[0] > -1.3) and (self.joint[1] < 0.833) and (self.joint[1] > 0.035) #this range is wrong
         if IsSafe:
-            return {
-                '1': self.ShoulderF(joint),
-                '2': self.ShoulderB(joint),
-                '3': self.ElbowF(joint),
-                '4': self.ElbowB(joint),
-            }[act_cmd]
+            print "Done?"
+            keyboard_in = raw_input()
+            if keyboard_in == 1:
+                return True
+            else:
+                return {
+                    '1': self.ShoulderF(joint),
+                    '2': self.ShoulderB(joint),
+                    '3': self.ElbowF(joint),
+                    '4': self.ElbowB(joint),
+                }[act_cmd]
             
         else:
-            print "Unsafe! Done!"
+            return True
 
     def ShoulderF(self, joint):
         new_angle = self.joint[0] + 0.1
         motion.setAngles("RShoulderRoll", new_angle, 0.2)
+        return False
 
     def ShoulderB(self, joint):
         new_angle = self.joint[0] - 0.1
         motion.setAngles("RShoulderRoll", new_angle, 0.2)
+        return False
 
     def ElbowF(self, joint):
         new_angle = self.joint[1] + 0.1
         motion.setAngles("RElbowRoll", new_angle, 0.2)
+        return False
 
     def ElbowB(self, joint):
         new_angle = self.joint[1] - 0.1
         motion.setAngles("RElbowRoll", new_angle, 0.2)
+        return False
 
     def calState(self, joint):
         a = self.joint[0]
         b = self.joint[1]
         a0 = 0.211
         b0 = 0.833
-        print a,b
+        #print a,b
         # [0.21932005882263184, 0.8268680572509766]
-        self.state = 8 * round((a0 - a) / 0.1) + round((b0 - b) / 0.1) + 1
-        #state = int(state)
+        self.state = int(8 * round((a0 - a) / 0.1) + round((b0 - b) / 0.1) + 1)
+        print self.state
         return self.state
 
 
@@ -139,13 +149,13 @@ class DQN():
         self.saver = tf.train.Saver()
         checkpoint = tf.train.get_checkpoint_state("saved_networks")
         if checkpoint and checkpoint.model_checkpoint_path:
-            self.saver.restore(self.session, checkpoint.model_checkpoint_path)
-            print "Successfully loaded:", checkpoint.model_checkpoint_path
+                self.saver.restore(self.session, checkpoint.model_checkpoint_path)
+                print "Successfully loaded:", checkpoint.model_checkpoint_path
         else:
-            print "Could not find old network weights"
+                print "Could not find old network weights"
 
         global summary_writer
-        summary_writer = tf.train.SummaryWriter('~/logs',graph=self.session.graph)
+        summary_writer = tf.summary.FileWriter('~/logs',graph=self.session.graph)
 
     def create_Q_network(self):
         # network weights
@@ -166,9 +176,9 @@ class DQN():
         self.y_input = tf.placeholder("float",[None])
         Q_action = tf.reduce_sum(tf.multiply(self.Q_value,self.action_input),reduction_indices = 1)
         self.cost = tf.reduce_mean(tf.square(self.y_input - Q_action))
-        tf.scalar_summary("loss",self.cost)
+        tf.summary.scalar("loss",self.cost)
         global merged_summary_op
-        merged_summary_op = tf.merge_all_summaries()
+        merged_summary_op = tf.summary.merge_all()
         self.optimizer = tf.train.AdamOptimizer(0.0001).minimize(self.cost)
 
     def perceive(self,state,action,reward,next_state,done):
@@ -255,20 +265,26 @@ EPISODE = 10000 # Episode limitation
 STEP = 300 # Step limitation in an episode
 TEST = 10 # The number of experiment test every 100 episode
 
-'''def main():
+def main():
     # initialize OpenAI Gym env and dqn agent
-    env = gym.make(ENV_NAME)
+    RobotInit()
+    env = ENV()
     agent = DQN(env)
 
     for episode in xrange(EPISODE):
         # initialize task
-        state = env.reset()
+        joints = env.getJoint()
+        state = env.calState(joints)
         # Train 
         for step in xrange(STEP):
             action = agent.egreedy_action(state) # e-greedy action for train
-            next_state,reward,done,_ = env.step(action) # these three results can be calculate independently
+            done = env.ActPerfm(action)
+            joints = env.getJoint()
+            next_state = env.calState(joints)
+            reward = env.calReward()
+            # next_state,reward,done,_ = env.step(action) # these three results can be calculate independently
             # Define reward for agent
-            reward_agent = -1 if done else 0.1
+            # reward_agent = -1 if done else 0.1
             agent.perceive(state,action,reward,next_state,done)
             state = next_state
             if done:
@@ -301,16 +317,15 @@ TEST = 10 # The number of experiment test every 100 episode
             total_reward += reward
             if done:
                 break
-    env.monitor.close()'''
-
-'''if __name__ == '__main__':
-    main()'''
+    env.monitor.close()
 
 if __name__ == '__main__':
     rospy.init_node('central_node', anonymous = False)
-    RobotInit()
-    env = ENV()
-    #agent = DQN(env)
+    main()
+
+'''if __name__ == '__main__':
+    rospy.init_node('central_node', anonymous = False)
+
 
     try:
 
@@ -330,10 +345,9 @@ if __name__ == '__main__':
             state = env.calState(joints)
             print state
             time.sleep(1)
-            print "done?"
-            something = raw_input()
+
             print "thanks for giving me " + something
 
 
     except rospy.ROSInterruptException:
-        pass
+        pass'''

@@ -15,6 +15,7 @@ import numpy as np
 import random
 from collections import deque
 import roslib; roslib.load_manifest('numpy_tutorial')
+from std_msgs.msg import Float32MultiArray
 from rospy_tutorials.msg import Floats
 import math
 
@@ -47,7 +48,7 @@ class ENV():
         self.reward = 0
         self.state = 1
         self.joint = (0,0)
-        self.state_dim = 2
+        self.state_dim = 1
         self.action_dim = 4
 
 
@@ -113,8 +114,9 @@ class ENV():
         b0 = 0.833
         #print a,b
         # [0.21932005882263184, 0.8268680572509766]
-        self.state = int(8 * round((a0 - a) / 0.1) + round((b0 - b) / 0.1) + 1)
-        print self.state
+        state_result = int(8 * round((a0 - a) / 0.1) + round((b0 - b) / 0.1) + 1)
+        self.state = np.array([state_result])
+        #print self.state
         return self.state
 
 
@@ -275,10 +277,11 @@ def main():
         # initialize task
         joints = env.getJoint()
         state = env.calState(joints)
+        #print type(state), state
         # Train 
         for step in xrange(STEP):
             action = agent.egreedy_action(state) # e-greedy action for train
-            done = env.ActPerfm(action)
+            done = env.ActPerfm(action, joints)
             joints = env.getJoint()
             next_state = env.calState(joints)
             reward = env.calReward()
@@ -293,11 +296,15 @@ def main():
         if episode % 100 == 0:
             total_reward = 0
             for i in xrange(TEST):
-                state = env.reset()
+                joints = env.getJoint()
+                state = env.calState(joints)
                 for j in xrange(STEP):
-                    env.render()
+                    #env.render()!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                     action = agent.action(state) # direct action for test
-                    state,reward,done,_ = env.step(action)
+                    done = env.ActPerfm(action, joints)
+                    joints = env.getJoint()
+                    next_state = env.calState(joints)
+                    reward = env.calReward()
                     total_reward += reward
                     if done:
                         break
@@ -309,45 +316,20 @@ def main():
     # save results for uploading
     env.monitor.start('gym_results/CartPole-v0-experiment-1',force = True)
     for i in xrange(100):
-        state = env.reset()
+        #state = env.reset()
         for j in xrange(200):
-            env.render()
+            #env.render()
             action = agent.action(state) # direct action for test
-            state,reward,done,_ = env.step(action)
+            done = env.ActPerfm(action, joints)
+            joints = env.getJoint()
+            next_state = env.calState(joints)
+            reward = env.calReward()
             total_reward += reward
             if done:
                 break
-    env.monitor.close()
+    # env.monitor.close() 
 
 if __name__ == '__main__':
     rospy.init_node('central_node', anonymous = False)
     main()
 
-'''if __name__ == '__main__':
-    rospy.init_node('central_node', anonymous = False)
-
-
-    try:
-
-        while not rospy.is_shutdown():
-            time.sleep(2)
-            joints = env.getJoint()
-            print joints
-            time.sleep(2)
-            act_cmd = random.randrange(1,5,1)
-            print act_cmd
-            joints = env.getJoint()
-            
-            env.ActPerfm(str(act_cmd),joints)
-            print "actin end main"
-            time.sleep(2)
-            joints = env.getJoint()
-            state = env.calState(joints)
-            print state
-            time.sleep(1)
-
-            print "thanks for giving me " + something
-
-
-    except rospy.ROSInterruptException:
-        pass'''

@@ -70,19 +70,23 @@ class ENV():
         self.joint = data.data
 
     def ActPerfm(self, act_cmd, joint):
-        IsSafe = (self.joint[0] < 0.211) and (self.joint[0] > -1.3) and (self.joint[1] < 0.833) and (self.joint[1] > 0.035) #this range is wrong
+        
+        IsSafe = (self.joint[0] < 0.3) and (self.joint[0] > -1.3) and (self.joint[1] < 1) and (self.joint[1] > 0.035) #this range is wrong
+        print act_cmd
+        print type(act_cmd)
         if IsSafe:
             print "Done?"
             keyboard_in = raw_input()
             if keyboard_in == 1:
                 return True
             else:
-                return {
-                    '1': self.ShoulderF(joint),
-                    '2': self.ShoulderB(joint),
-                    '3': self.ElbowF(joint),
-                    '4': self.ElbowB(joint),
+                fun = {
+                    '0': self.ShoulderF,
+                    '1': self.ShoulderB,
+                    '2': self.ElbowF,
+                    '3': self.ElbowB,
                 }[act_cmd]
+            fun(joint)
             
         else:
             return True
@@ -90,21 +94,25 @@ class ENV():
     def ShoulderF(self, joint):
         new_angle = self.joint[0] + 0.1
         motion.setAngles("RShoulderRoll", new_angle, 0.2)
+        time.sleep(1)
         return False
 
     def ShoulderB(self, joint):
         new_angle = self.joint[0] - 0.1
         motion.setAngles("RShoulderRoll", new_angle, 0.2)
+        time.sleep(1)
         return False
 
     def ElbowF(self, joint):
         new_angle = self.joint[1] + 0.1
         motion.setAngles("RElbowRoll", new_angle, 0.2)
+        time.sleep(1)
         return False
 
     def ElbowB(self, joint):
         new_angle = self.joint[1] - 0.1
         motion.setAngles("RElbowRoll", new_angle, 0.2)
+        time.sleep(1)
         return False
 
     def calState(self, joint):
@@ -187,6 +195,8 @@ class DQN():
         one_hot_action = np.zeros(self.action_dim)
         one_hot_action[action] = 1
         self.replay_buffer.append((state,one_hot_action,reward,next_state,done))
+        print "length of buffer:"
+        print len(self.replay_buffer)
         if len(self.replay_buffer) > REPLAY_SIZE:
             self.replay_buffer.popleft()
 
@@ -233,16 +243,20 @@ class DQN():
             self.state_input:[state]
             })[0]
         if random.random() <= self.epsilon:
-            return random.randint(0,self.action_dim - 1)
+            act_cmd = random.randint(0,self.action_dim - 1)
         else:
-            return np.argmax(Q_value)
+            act_cmd = np.argmax(Q_value)
+
 
         self.epsilon -= (INITIAL_EPSILON - FINAL_EPSILON)/10000
 
+        return str(act_cmd)
+
     def action(self,state):
-        return np.argmax(self.Q_value.eval(feed_dict = {
+        act_cmd = np.argmax(self.Q_value.eval(feed_dict = {
             self.state_input:[state]
             })[0])
+        return str(act_cmd)
 
     def weight_variable(self,shape):
         initial = tf.truncated_normal(shape)
@@ -251,15 +265,6 @@ class DQN():
     def bias_variable(self,shape):
         initial = tf.constant(0.01, shape = shape)
         return tf.Variable(initial)
-
-
-
-
-
-
-
-
-
 
 # ---------------------------------------------------------
 # Hyper Parameters
@@ -281,14 +286,17 @@ def main():
         # Train 
         for step in xrange(STEP):
             action = agent.egreedy_action(state) # e-greedy action for train
+            
             done = env.ActPerfm(action, joints)
             joints = env.getJoint()
             next_state = env.calState(joints)
             reward = env.calReward()
+            print action,state,reward
+            time.sleep(1)
             # next_state,reward,done,_ = env.step(action) # these three results can be calculate independently
             # Define reward for agent
             # reward_agent = -1 if done else 0.1
-            agent.perceive(state,action,reward,next_state,done)
+            agent.perceive(state,int(action),reward,next_state,done)
             state = next_state
             if done:
                 break
@@ -316,7 +324,8 @@ def main():
     # save results for uploading
     env.monitor.start('gym_results/CartPole-v0-experiment-1',force = True)
     for i in xrange(100):
-        #state = env.reset()
+        joints = env.getJoint()
+        state = env.calState(joints)
         for j in xrange(200):
             #env.render()
             action = agent.action(state) # direct action for test
@@ -332,4 +341,4 @@ def main():
 if __name__ == '__main__':
     rospy.init_node('central_node', anonymous = False)
     main()
-
+    

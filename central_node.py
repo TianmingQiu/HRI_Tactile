@@ -70,14 +70,14 @@ class ENV():
         self.joint = data.data
 
     def ActPerfm(self, act_cmd, joint):
-        
-        IsSafe = (self.joint[0] < 0.3) and (self.joint[0] > -1.3) and (self.joint[1] < 1) and (self.joint[1] > 0.035) #this range is wrong
-        print act_cmd
-        print type(act_cmd)
+        print "input:"
+        print act_cmd, joint
+        #IsSafe = (joint[0] < 0.3) and (joint[0] > -1.3) and (joint[1] < 1) and (joint[1] > 0.035) #this range is wrong
+        IsSafe = True
         if IsSafe:
             print "Done?"
             keyboard_in = raw_input()
-            if keyboard_in == 1:
+            if (keyboard_in == '1'):
                 return True
             else:
                 fun = {
@@ -86,45 +86,47 @@ class ENV():
                     '2': self.ElbowF,
                     '3': self.ElbowB,
                 }[act_cmd]
-            fun(joint)
+                fun(joint)
+                return False
             
         else:
             return True
 
     def ShoulderF(self, joint):
-        new_angle = self.joint[0] + 0.1
+        print "SF"
+        new_angle = joint[0] + 0.1
         motion.setAngles("RShoulderRoll", new_angle, 0.2)
-        time.sleep(1)
-        return False
+        #time.sleep(1)
+        
 
     def ShoulderB(self, joint):
-        new_angle = self.joint[0] - 0.1
+        print "SB"
+        new_angle = joint[0] - 0.1
         motion.setAngles("RShoulderRoll", new_angle, 0.2)
-        time.sleep(1)
-        return False
+
 
     def ElbowF(self, joint):
-        new_angle = self.joint[1] + 0.1
+        print "EF"
+        new_angle = joint[1] + 0.1
         motion.setAngles("RElbowRoll", new_angle, 0.2)
-        time.sleep(1)
-        return False
+        #time.sleep(1)
+
 
     def ElbowB(self, joint):
-        new_angle = self.joint[1] - 0.1
+        print "EB"
+        new_angle = joint[1] - 0.1
         motion.setAngles("RElbowRoll", new_angle, 0.2)
-        time.sleep(1)
-        return False
+        #time.sleep(1)
+
 
     def calState(self, joint):
         a = self.joint[0]
         b = self.joint[1]
         a0 = 0.211
         b0 = 0.833
-        #print a,b
         # [0.21932005882263184, 0.8268680572509766]
         state_result = int(8 * round((a0 - a) / 0.1) + round((b0 - b) / 0.1) + 1)
         self.state = np.array([state_result])
-        #print self.state
         return self.state
 
 
@@ -153,7 +155,7 @@ class DQN():
 
         # Init session
         self.session = tf.InteractiveSession()
-        self.session.run(tf.initialize_all_variables())
+        self.session.run(tf.global_variables_initializer())
 
         # loading networks
         self.saver = tf.train.Saver()
@@ -281,17 +283,24 @@ def main():
     for episode in xrange(EPISODE):
         # initialize task
         joints = env.getJoint()
+        joints = env.getJoint()
+        time.sleep(0.2)
         state = env.calState(joints)
-        #print type(state), state
+        #print joints
         # Train 
         for step in xrange(STEP):
+            print "episode, step:"
+            print episode, step
             action = agent.egreedy_action(state) # e-greedy action for train
             
             done = env.ActPerfm(action, joints)
             joints = env.getJoint()
+            time.sleep(0.2)
+            joints = env.getJoint()
             next_state = env.calState(joints)
             reward = env.calReward()
-            print action,state,reward
+            print "action,state,reward,done:"
+            print action,state,reward,done
             time.sleep(1)
             # next_state,reward,done,_ = env.step(action) # these three results can be calculate independently
             # Define reward for agent
@@ -311,6 +320,8 @@ def main():
                     action = agent.action(state) # direct action for test
                     done = env.ActPerfm(action, joints)
                     joints = env.getJoint()
+                    time.sleep(0.2)
+                    joints = env.getJoint()
                     next_state = env.calState(joints)
                     reward = env.calReward()
                     total_reward += reward
@@ -322,14 +333,18 @@ def main():
                 break
 
     # save results for uploading
-    env.monitor.start('gym_results/CartPole-v0-experiment-1',force = True)
+    #env.monitor.start('gym_results/CartPole-v0-experiment-1',force = True)
     for i in xrange(100):
+        joints = env.getJoint()
+        time.sleep(0.2)
         joints = env.getJoint()
         state = env.calState(joints)
         for j in xrange(200):
             #env.render()
             action = agent.action(state) # direct action for test
             done = env.ActPerfm(action, joints)
+            joints = env.getJoint()
+            time.sleep(0.2)
             joints = env.getJoint()
             next_state = env.calState(joints)
             reward = env.calReward()

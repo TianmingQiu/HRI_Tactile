@@ -35,11 +35,11 @@ def RobotInit():
     time.sleep(1)
     motion.setAngles(names, angles, fractionMaxSpeed)
 
-    time.sleep(1)
+    time.sleep(5)
     motion.openHand('RHand')
     time.sleep(2)
     motion.closeHand('RHand')
-    time.sleep(5)
+    time.sleep(1)
     print "Ready!"
 
 
@@ -48,7 +48,7 @@ class ENV():
         self.reward = 0
         self.state = 1
         self.joint = (0,0)
-        self.state_dim = 1
+        self.state_dim = 2
         self.action_dim = 4
 
 
@@ -56,11 +56,13 @@ class ENV():
         rospy.Subscriber("force_hand", Float32MultiArray, self.reward_CB)
         return self.reward
     def reward_CB(self, data):
+        
         self.reward = 0
         # calculate reward according to skin cell with different weightings
         for i in range(14):
             self.reward = self.reward + data.data[i]
-        self.reward = self.reward + 5 * (data.data[0] + data.data[1] + data.data[9] + data.data[11])
+        self.reward = - (self.reward + 5 * (data.data[0] + data.data[1] + data.data[9] + data.data[11]))
+        
 
 
     def getJoint(self):
@@ -70,10 +72,9 @@ class ENV():
         self.joint = data.data
 
     def ActPerfm(self, act_cmd, joint):
-        print "input:"
-        print act_cmd, joint
-        #IsSafe = (joint[0] < 0.3) and (joint[0] > -1.3) and (joint[1] < 1) and (joint[1] > 0.035) #this range is wrong
-        IsSafe = True
+        #print "input: %s, %s" %(act_cmd, joint)
+        IsSafe = (joint[0] < 0.3) and (joint[0] > -1.3) and (joint[1] < 1.5) and (joint[1] > 0.035) #this range is wrong
+        #IsSafe = True
         if IsSafe:
             print "Done?"
             keyboard_in = raw_input()
@@ -93,40 +94,41 @@ class ENV():
             return True
 
     def ShoulderF(self, joint):
-        print "SF"
+        
         new_angle = joint[0] + 0.1
         motion.setAngles("RShoulderRoll", new_angle, 0.2)
         #time.sleep(1)
         
 
     def ShoulderB(self, joint):
-        print "SB"
+        
         new_angle = joint[0] - 0.1
         motion.setAngles("RShoulderRoll", new_angle, 0.2)
 
 
     def ElbowF(self, joint):
-        print "EF"
+        
         new_angle = joint[1] + 0.1
         motion.setAngles("RElbowRoll", new_angle, 0.2)
         #time.sleep(1)
 
 
     def ElbowB(self, joint):
-        print "EB"
+        
         new_angle = joint[1] - 0.1
         motion.setAngles("RElbowRoll", new_angle, 0.2)
         #time.sleep(1)
 
 
     def calState(self, joint):
-        a = self.joint[0]
-        b = self.joint[1]
-        a0 = 0.211
-        b0 = 0.833
+        a = round(self.joint[0], 1)
+        b = round(self.joint[1], 1)
+        #a0 = 0.211
+        #b0 = 0.833
         # [0.21932005882263184, 0.8268680572509766]
-        state_result = int(8 * round((a0 - a) / 0.1) + round((b0 - b) / 0.1) + 1)
-        self.state = np.array([state_result])
+        #state_result = int(8 * round((a0 - a) / 0.1) + round((b0 - b) / 0.1) + 1)
+        state_result = [a, b]
+        self.state = np.array(state_result)
         return self.state
 
 
@@ -134,7 +136,7 @@ class ENV():
 # ------------------------------------
 # Hyper Parameters for DQN
 GAMMA = 0.9 # discount factor for target Q 
-INITIAL_EPSILON = 0.5 # starting value of epsilon
+INITIAL_EPSILON = 1 # starting value of epsilon
 FINAL_EPSILON = 0.01 # final value of epsilon
 REPLAY_SIZE = 10000 # experience replay buffer size
 BATCH_SIZE = 32 # size of minibatch
@@ -283,14 +285,13 @@ def main():
     for episode in xrange(EPISODE):
         # initialize task
         joints = env.getJoint()
-        joints = env.getJoint()
         time.sleep(0.2)
+        joints = env.getJoint()
         state = env.calState(joints)
         #print joints
         # Train 
         for step in xrange(STEP):
-            print "episode, step:"
-            print episode, step
+            print "Episode: %s, Step: %s" %(episode, step)
             action = agent.egreedy_action(state) # e-greedy action for train
             
             done = env.ActPerfm(action, joints)
@@ -298,9 +299,11 @@ def main():
             time.sleep(0.2)
             joints = env.getJoint()
             next_state = env.calState(joints)
+            print "Skin will collect reward!"
+            time.sleep(4)
             reward = env.calReward()
-            print "action,state,reward,done:"
-            print action,state,reward,done
+            print "Finish collecting reward"
+            print "action: %s, state: %s, reward: %s, done: %s" %(action,state,reward,done)
             time.sleep(1)
             # next_state,reward,done,_ = env.step(action) # these three results can be calculate independently
             # Define reward for agent
@@ -311,8 +314,12 @@ def main():
                 break
         # Test every 100 episodes
         if episode % 100 == 0:
+            print " "
+            print "TEST"
             total_reward = 0
             for i in xrange(TEST):
+                joints = env.getJoint()
+                time.sleep(0.2)
                 joints = env.getJoint()
                 state = env.calState(joints)
                 for j in xrange(STEP):
@@ -323,7 +330,10 @@ def main():
                     time.sleep(0.2)
                     joints = env.getJoint()
                     next_state = env.calState(joints)
+                    print "Skin will collect reward!"
+                    time.sleep(4)
                     reward = env.calReward()
+                    print "Finish collecting reward"
                     total_reward += reward
                     if done:
                         break
@@ -335,6 +345,8 @@ def main():
     # save results for uploading
     #env.monitor.start('gym_results/CartPole-v0-experiment-1',force = True)
     for i in xrange(100):
+        print " "
+        print "Uploading!"
         joints = env.getJoint()
         time.sleep(0.2)
         joints = env.getJoint()
@@ -347,7 +359,10 @@ def main():
             time.sleep(0.2)
             joints = env.getJoint()
             next_state = env.calState(joints)
+            print "Skin will collect reward!"
+            time.sleep(4)
             reward = env.calReward()
+            print "Finish collecting reward"
             total_reward += reward
             if done:
                 break

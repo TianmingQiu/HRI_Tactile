@@ -61,7 +61,8 @@ class ENV():
         # calculate reward according to skin cell with different weightings
         for i in range(14):
             self.reward = self.reward + data.data[i]
-        self.reward = - (self.reward + 5 * (data.data[0] + data.data[1] + data.data[9] + data.data[11]))
+        #self.reward = - (self.reward + 5 * (data.data[0] + data.data[1] + data.data[9] + data.data[11]))
+        self.reward = - self.reward
         
 
 
@@ -334,6 +335,7 @@ def main():
                     time.sleep(4)
                     reward = env.calReward()
                     print "Finish collecting reward"
+                    print "action: %s, state: %s, reward: %s, done: %s" %(action,state,reward,done)
                     total_reward += reward
                     if done:
                         break

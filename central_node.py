@@ -58,21 +58,27 @@ class ENV():
         rospy.Subscriber("force_hand", Float32MultiArray, self.reward_CB)
         return self.reward, self.guide
     def reward_CB(self, data):
-        self.reward = 0
+        cell_sum = 0
         # calculate reward according to skin cell with different weightings
         for i in range(14):
-            self.reward = self.reward + data.data[i]
+            cell_sum = cell_sum + data.data[i]
         #self.reward = - (self.reward + 5 * (data.data[0] + data.data[1] + data.data[9] + data.data[11]))
-        self.reward = - self.reward
+        
         # below need to be tested:
-        deviation = data.data[11] + data.data[9] - data.data[1] - data.data[0] 
-        Threshlod = 0.1 ################################################################################################## NBD
-        if deviation <= -Threshlod:
+        part_out = 3 * data.data[0] + data.data[1] + data.data[9] + 5 * data.data[11]
+        part_in = cell_sum - part_out + 5 * data.data[3] + 5 * data.data[8]
+        part_in = part_in / 20
+        part_out = part_out / 10
+        deviation = part_out - 3 * part_in
+        #print deviation
+        if deviation <= -0.01:
             self.guide = -1
-        elif deviation >= Threshlod:
+        elif deviation >= 0.03:
             self.guide = 1
         else: 
              self.guide = 0
+
+        self.reward = - (part_out + part_in)
 
 
     def getJoint(self):

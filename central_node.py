@@ -41,7 +41,7 @@ def RobotStartUp():
     time.sleep(2)
     motion.closeHand('RHand')
     time.sleep(1)
-    print "Ready!"
+
 
 
 class ENV():
@@ -49,7 +49,7 @@ class ENV():
         self.reward = 0
         self.state = 1
         self.guide = 0
-        self.joint = (0,0)
+        self.joint = (0.24846601486206055, 0.8529460430145264)
         self.state_dim = 2
         self.action_dim = 4
 
@@ -89,7 +89,7 @@ class ENV():
 
     def ActPerfm(self, act_cmd, joint):
         #print "input: %s, %s" %(act_cmd, joint)
-        IsSafe = (joint[0] < 0.3) and (joint[0] > -1.3) and (joint[1] < 1.5) and (joint[1] > 0.035) #this range is wrong
+        IsSafe = (joint[0] <= 0.3) and (joint[0] >= -1.3) and (joint[1] <= 1.5) and (joint[1] >= 0.03) #this range is wrong
         #IsSafe = True
         if IsSafe:
             print "Done?"
@@ -306,6 +306,10 @@ def main():
     RobotStartUp()
     env = ENV()
     agent = DQN(env)
+    print "Ready to train?[y/N]"
+    keyboard_in = raw_input()
+    if (keyboard_in == 'y'):
+        pass
 
     for episode in xrange(EPISODE):
         # initialize task
@@ -362,10 +366,10 @@ def main():
                     next_state = env.calState(joints)
                     print "Skin will collect reward!"
                     time.sleep(4)
-                    reward = env.calReward()
+                    reward,_ = env.calReward()
                     print "Finish collecting reward"
                     print "action: %s, state: %s, reward: %s, done: %s" %(action,state,reward,done)
-                    total_reward += reward
+                    total_reward = total_reward + reward
                     if done:
                         RobotInit()
                         break
@@ -393,9 +397,9 @@ def main():
             next_state = env.calState(joints)
             print "Skin will collect reward!"
             time.sleep(4)
-            reward = env.calReward()
+            reward,_ = env.calReward()
             print "Finish collecting reward"
-            total_reward += reward
+            total_reward = total_reward + reward
             if done:
                 RobotInit()
                 break
@@ -404,4 +408,4 @@ def main():
 if __name__ == '__main__':
     rospy.init_node('central_node', anonymous = False)
     main()
-    
+

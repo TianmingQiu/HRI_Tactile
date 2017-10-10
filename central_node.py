@@ -69,7 +69,7 @@ class ENV():
         Threshlod = 0.1 ################################################################################################## NBD
         if deviation <= -Threshlod:
             self.guide = -1
-        elif: deviation >= Threshlod:
+        elif deviation >= Threshlod:
             self.guide = 1
         else: 
              self.guide = 0
@@ -124,7 +124,6 @@ class ENV():
 
 
     def ElbowOut(self, joint):
-        
         new_angle = joint[1] - 0.1
         motion.setAngles("RElbowRoll", new_angle, 0.2)
         #time.sleep(1)

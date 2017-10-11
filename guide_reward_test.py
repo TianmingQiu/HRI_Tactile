@@ -47,20 +47,27 @@ class ENV():
         
         # below need to be tested:
         
-        part_out = 3 * data.data[0] + data.data[1] + data.data[9] + 5 * data.data[11]
-        part_in = cell_sum - part_out + 5 * data.data[3] + 5 * data.data[8]
-        part_in = part_in / 20
-        part_out = part_out / 10
+        part_out = data.data[0] + data.data[1] + data.data[9] + data.data[11]
+        part_in = (cell_sum - part_out + 5 * data.data[3] + 5 * data.data[8]) / 20
+        part_out = (3 * data.data[0] + data.data[1] + data.data[9] + 5 * data.data[11]) / 10
+        if part_in < 0.005:
+            part_in = 0
+        else:
+            part_in = part_in - 0.005
+        if part_out < 0.03:
+            part_out = 0
+        else:
+            part_out = part_out - 0.03
         deviation = part_out - 2 * part_in
         #print deviation
         if deviation <= -0.01:
             self.guide = -1
-        elif deviation >= 0.015:
+        elif deviation >= 0.01:
             self.guide = 1
         else: 
              self.guide = 0
 
-        self.reward = - (part_out + part_in)
+        self.reward = - (part_out + part_in) * (part_out + part_in)
         self.dev = deviation
         self.in_out = (part_in,part_out)
 

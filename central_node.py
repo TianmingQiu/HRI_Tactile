@@ -66,21 +66,21 @@ class ENV():
         
         # below need to be tested:
         part_out = data.data[0] + data.data[1] + data.data[9] + data.data[11]
-        part_in = (cell_sum - part_out + 5 * data.data[3] + 5 * data.data[8]) / 20
-        part_out = (3 * data.data[0] + data.data[1] + data.data[9] + 5 * data.data[11]) / 10
-        if part_in < 0.02:
+        part_in = (cell_sum - part_out) / 8
+        part_out = part_out / 4
+        if part_in < 0.01:
             part_in = 0
         else:
             part_in = part_in - 0.01
-        if part_out < 0.03:
+        if part_out < 0.01:
             part_out = 0
         else:
-            part_out = part_out - 0.03
+            part_out = part_out - 0.01
         deviation = part_out -  part_in
         #print deviation
-        if deviation <= -0.01:
+        if deviation <= -0.02:
             self.guide = -1
-        elif deviation >= 0.01:
+        elif deviation >= 0.02:
             self.guide = 1
         else: 
              self.guide = 0
@@ -95,8 +95,8 @@ class ENV():
         self.joint = data.data
 
     def ActPerfm(self, act_cmd, joint):
-        #print "input: %s, %s" %(act_cmd, joint)
-        IsSafe = (joint[0] <= 0.3) and (joint[0] >= -1.3) and (joint[1] <= 1.5) and (joint[1] >= 0.03) #this range is wrong
+        print "Action Command: %s" %act_cmd
+        IsSafe = (joint[0] <= 0.32) and (joint[0] >= -1.3) and (joint[1] <= 1.5) and (joint[1] >= 0.03) #this range is wrong
         #IsSafe = True
         if IsSafe:
             print "Done?"
@@ -117,29 +117,28 @@ class ENV():
             return True
 
     def ShoulderIn(self, joint):
-        
         new_angle = joint[0] + 0.1
         motion.setAngles("RShoulderRoll", new_angle, 0.2)
-        #time.sleep(1)
-        
+        print "0: ShoulderIn"
+
 
     def ShoulderOut(self, joint):
-        
         new_angle = joint[0] - 0.1
         motion.setAngles("RShoulderRoll", new_angle, 0.2)
+        print "1: ShoulderOut"
 
 
     def ElbowIn(self, joint):
-        
         new_angle = joint[1] + 0.1
         motion.setAngles("RElbowRoll", new_angle, 0.2)
-        #time.sleep(1)
+        print "2: ElbowIn"
+
 
 
     def ElbowOut(self, joint):
         new_angle = joint[1] - 0.1
         motion.setAngles("RElbowRoll", new_angle, 0.2)
-        #time.sleep(1)
+        print "3: ElbowOut"
 
 
     def calState(self, joint):
@@ -319,6 +318,7 @@ def main():
         pass
 
     for episode in xrange(EPISODE):
+        print "Train"
         # initialize task
         joints = env.getJoint()
         time.sleep(0.2)
@@ -330,7 +330,9 @@ def main():
         for step in xrange(STEP):
             print "Episode: %s, Step: %s" %(episode, step)
             if guide != 0:
-                action = agent.guide_action(guide)
+                print "Give a guide:"
+                action_guide = raw_input()
+                action = str(action_guide)
             else:
                 action = agent.egreedy_action(state) # e-greedy action for train
             
@@ -339,10 +341,13 @@ def main():
             time.sleep(0.2)
             joints = env.getJoint()
             next_state = env.calState(joints)
-            print "Skin will collect reward!"
-            time.sleep(4)
-            reward, guide = env.calReward()####################
-            print "Finish collecting reward"
+            print "Skin will collect reward:"
+            keyboard_in = raw_input()
+            if (keyboard_in == '0'):
+                pass
+            time.sleep(1)
+            reward, guide = env.calReward()
+            time.sleep(1)
             print "action: %s, state: %s, reward: %s, guide: %s(1: move out | -1: move in), done: %s" %(action,state,reward,guide,done)
             time.sleep(1)
             # next_state,reward,done,_ = env.step(action) # these three results can be calculate independently
@@ -371,18 +376,21 @@ def main():
                     time.sleep(0.2)
                     joints = env.getJoint()
                     next_state = env.calState(joints)
-                    print "Skin will collect reward!"
-                    time.sleep(4)
-                    reward,_ = env.calReward()
-                    print "Finish collecting reward"
+                    print "Skin will collect reward:"
+                    keyboard_in = raw_input()
+                    if (keyboard_in == '0'):
+                        pass
+                    time.sleep(1)
+                    reward, guide = env.calReward()
+                    time.sleep(1)
                     print "action: %s, state: %s, reward: %s, done: %s" %(action,state,reward,done)
-                    total_reward = total_reward + reward
+                    total_reward = total_reward + (100 - reward)
                     if done:
                         RobotInit()
                         break
             ave_reward = total_reward/TEST
             print 'episode: ',episode,'Evaluation Average Reward:',ave_reward
-            if ave_reward >= 200:
+            if ave_reward >= 2000:
                 break
 
     # save results for uploading
@@ -402,11 +410,15 @@ def main():
             time.sleep(0.2)
             joints = env.getJoint()
             next_state = env.calState(joints)
-            print "Skin will collect reward!"
-            time.sleep(4)
-            reward,_ = env.calReward()
-            print "Finish collecting reward"
-            total_reward = total_reward + reward
+            print "Skin will collect reward:"
+            keyboard_in = raw_input()
+            if (keyboard_in == '0'):
+                pass
+            time.sleep(1)
+            reward, guide = env.calReward()
+            time.sleep(1)
+            print "action: %s, state: %s, reward: %s, done: %s" %(action,state,reward,done)
+            total_reward = total_reward + (100 - reward)
             if done:
                 RobotInit()
                 break

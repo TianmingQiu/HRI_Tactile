@@ -48,21 +48,21 @@ class ENV():
         # below need to be tested:
         
         part_out = data.data[0] + data.data[1] + data.data[9] + data.data[11]
-        part_in = (cell_sum - part_out + 5 * data.data[3] + 5 * data.data[8]) / 20
-        part_out = (3 * data.data[0] + data.data[1] + data.data[9] + 5 * data.data[11]) / 10
-        if part_in < 0.02:
+        part_in = (cell_sum - part_out) / 8
+        part_out = part_out / 4
+        if part_in < 0.01:
             part_in = 0
         else:
             part_in = part_in - 0.01
-        if part_out < 0.03:
+        if part_out < 0.01:
             part_out = 0
         else:
-            part_out = part_out - 0.03
+            part_out = part_out - 0.01
         deviation = part_out -  part_in
         #print deviation
-        if deviation <= -0.01:
+        if deviation <= -0.02:
             self.guide = -1
-        elif deviation >= 0.01:
+        elif deviation >= 0.02:
             self.guide = 1
         else: 
              self.guide = 0
@@ -78,7 +78,7 @@ if __name__ == '__main__':
     env = ENV()
     while not rospy.is_shutdown():
         reward,guide,deviation,in_out = env.calReward()
-        time.sleep(0.2)
+        time.sleep(0.1)
         reward,guide,deviation,in_out = env.calReward()
         #print cell_data
         reward = round(reward, 4)
@@ -100,4 +100,4 @@ if __name__ == '__main__':
         print "Reward: %s, Guide: %s, Deviation: %s, In & Out: %s" %(reward,guide,deviation,a)
         
 
-        time.sleep(1)
+        time.sleep(0.3)

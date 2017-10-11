@@ -65,20 +65,27 @@ class ENV():
         #self.reward = - (self.reward + 5 * (data.data[0] + data.data[1] + data.data[9] + data.data[11]))
         
         # below need to be tested:
-        part_out = 3 * data.data[0] + data.data[1] + data.data[9] + 5 * data.data[11]
-        part_in = cell_sum - part_out + 5 * data.data[3] + 5 * data.data[8]
-        part_in = part_in / 20
-        part_out = part_out / 10
-        deviation = part_out - 3 * part_in
+        part_out = data.data[0] + data.data[1] + data.data[9] + data.data[11]
+        part_in = (cell_sum - part_out + 5 * data.data[3] + 5 * data.data[8]) / 20
+        part_out = (3 * data.data[0] + data.data[1] + data.data[9] + 5 * data.data[11]) / 10
+        if part_in < 0.02:
+            part_in = 0
+        else:
+            part_in = part_in - 0.01
+        if part_out < 0.03:
+            part_out = 0
+        else:
+            part_out = part_out - 0.03
+        deviation = part_out -  part_in
         #print deviation
         if deviation <= -0.01:
             self.guide = -1
-        elif deviation >= 0.03:
+        elif deviation >= 0.01:
             self.guide = 1
         else: 
              self.guide = 0
 
-        self.reward = - (part_out + part_in)
+        self.reward = - (part_out + part_in) * (part_out + part_in) * 10000
 
 
     def getJoint(self):

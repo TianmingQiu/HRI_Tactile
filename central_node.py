@@ -65,7 +65,7 @@ class ENV():
         #self.reward = - (self.reward + 5 * (data.data[0] + data.data[1] + data.data[9] + data.data[11]))
         
         # below need to be tested:
-        part_out = data.data[0] + data.data[1] + data.data[9] + data.data[11]
+        part_out = data.data[0] + data.data[1] + data.data[13] + data.data[11]
         part_in = (cell_sum - part_out) / 8
         part_out = part_out / 4
         if part_in < 0.01:
@@ -229,13 +229,17 @@ class DQN():
             self.train_Q_network()
 
     def train_Q_network(self):
+
         self.time_step += 1
+        print "train Q network: %sth" %self.time_step
         # Step 1: obtain random minibatch from replay memory
         minibatch = random.sample(self.replay_buffer,BATCH_SIZE)
         state_batch = [data[0] for data in minibatch]
         action_batch = [data[1] for data in minibatch]
         reward_batch = [data[2] for data in minibatch]
         next_state_batch = [data[3] for data in minibatch]
+
+
 
         # Step 2: calculate y
         y_batch = []
@@ -246,6 +250,8 @@ class DQN():
                 y_batch.append(reward_batch[i])
             else :
                 y_batch.append(reward_batch[i] + GAMMA * np.max(Q_value_batch[i]))
+
+
 
         self.optimizer.run(feed_dict={
             self.y_input:y_batch,
@@ -261,6 +267,13 @@ class DQN():
 
         # save network every 1000 iteration
         if self.time_step % 1000 == 0:
+            print " "
+            print "Save network!"
+            print "state_batch: %s" %state_batch
+            print "action_batch: %s" %action_batch
+            print "reward_batch: %s" %reward_batch
+            print "Q_value: %s" %Q_value
+            print Q_value_batch
             self.saver.save(self.session, 'saved_networks/' + 'network' + '-dqn', global_step = self.time_step)
 
     def guide_action(self,guide):
@@ -283,8 +296,7 @@ class DQN():
             act_cmd = np.argmax(Q_value)
 
 
-        self.epsilon -= (INITIAL_EPSILON - FINAL_EPSILON)/10000
-
+        self.epsilon -= (INITIAL_EPSILON - FINAL_EPSILON) / 10000
         return str(act_cmd)
 
     def action(self,state):
@@ -332,6 +344,11 @@ def main():
             if guide != 0:
                 print "Give a guide:"
                 action_guide = raw_input()
+                if (action_guide == '0') or (action_guide == '1') or (action_guide == '2') or (action_guide == '3'):
+                    pass
+                else:
+                    print "Give a guide again:"
+                    action_guide = raw_input()
                 action = str(action_guide)
             else:
                 action = agent.egreedy_action(state) # e-greedy action for train
@@ -345,11 +362,13 @@ def main():
             keyboard_in = raw_input()
             if (keyboard_in == '0'):
                 pass
-            time.sleep(1)
+            else:
+                pass
+            time.sleep(0.2)
             reward, guide = env.calReward()
-            time.sleep(1)
+            #time.sleep(0.2)
             print "action: %s, state: %s, reward: %s, guide: %s(1: move out | -1: move in), done: %s" %(action,state,reward,guide,done)
-            time.sleep(1)
+            #time.sleep(1)
             # next_state,reward,done,_ = env.step(action) # these three results can be calculate independently
             # Define reward for agent
             # reward_agent = -1 if done else 0.1
@@ -359,11 +378,12 @@ def main():
                 RobotInit() # everytime when a episode is finishing, go back to initial position
                 break
         # Test every 100 episodes
-        if episode % 100 == 0:
+        if (episode % 100 == 0) and (episode != 0):
             print " "
             print "TEST"
             total_reward = 0
             for i in xrange(TEST):
+                print "%sth Test:" %i
                 joints = env.getJoint()
                 time.sleep(0.2)
                 joints = env.getJoint()
@@ -380,11 +400,14 @@ def main():
                     keyboard_in = raw_input()
                     if (keyboard_in == '0'):
                         pass
+                    else :
+                        pass
                     time.sleep(1)
                     reward, guide = env.calReward()
                     time.sleep(1)
                     print "action: %s, state: %s, reward: %s, done: %s" %(action,state,reward,done)
-                    total_reward = total_reward + (100 - reward)
+                    total_reward = total_reward + (100 + reward)
+                    print "total_reward: %s" %total_reward
                     if done:
                         RobotInit()
                         break
@@ -410,15 +433,15 @@ def main():
             time.sleep(0.2)
             joints = env.getJoint()
             next_state = env.calState(joints)
-            print "Skin will collect reward:"
-            keyboard_in = raw_input()
-            if (keyboard_in == '0'):
-                pass
-            time.sleep(1)
-            reward, guide = env.calReward()
-            time.sleep(1)
-            print "action: %s, state: %s, reward: %s, done: %s" %(action,state,reward,done)
-            total_reward = total_reward + (100 - reward)
+            #print "Skin will collect reward:"
+            #keyboard_in = raw_input()
+            #if (keyboard_in == '0'):
+                #pass
+            #time.sleep(1)
+            #reward, guide = env.calReward()
+            #time.sleep(1)
+            #print "action: %s, state: %s, reward: %s, done: %s" %(action,state,reward,done)
+            #total_reward = total_reward + (100 - reward)
             if done:
                 RobotInit()
                 break

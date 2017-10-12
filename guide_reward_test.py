@@ -47,7 +47,7 @@ class ENV():
         
         # below need to be tested:
         
-        part_out = data.data[0] + data.data[1] + data.data[9] + data.data[11]
+        part_out = data.data[0] + data.data[1] + data.data[13] + data.data[11]
         part_in = (cell_sum - part_out) / 8
         part_out = part_out / 4
         if part_in < 0.01:

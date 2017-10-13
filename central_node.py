@@ -67,25 +67,25 @@ class ENV():
         # below need to be tested:
         part_out = data.data[0] + data.data[1] + data.data[13] + data.data[11]
         part_in = (cell_sum - part_out) / 8
-        part_out = part_out / 4
-        if part_in < 0.01:
+        part_out = (part_out - data.data[0] - data.data[13])/ 2
+        if part_in < 0.008:
             part_in = 0
         else:
-            part_in = part_in - 0.01
-        if part_out < 0.01:
+            part_in = part_in - 0.008
+        if part_out < 0.008:
             part_out = 0
         else:
-            part_out = part_out - 0.01
+            part_out = part_out - 0.008
         deviation = part_out -  part_in
         #print deviation
-        if deviation <= -0.02:
+        if part_in > 0.02:
             self.guide = -1
-        elif deviation >= 0.02:
+        elif part_out > 0.02:
             self.guide = 1
         else: 
              self.guide = 0
 
-        self.reward = - (part_out + part_in) * (part_out + part_in) * 10000
+        self.reward = 10 - (part_out + part_in) * (part_out + part_in) * 10000
 
 
     def getJoint(self):
@@ -117,37 +117,33 @@ class ENV():
             return True
 
     def ShoulderIn(self, joint):
-        new_angle = joint[0] + 0.1
+        new_angle = joint[0] + 0.05
         motion.setAngles("RShoulderRoll", new_angle, 0.2)
         print "0: ShoulderIn"
 
 
     def ShoulderOut(self, joint):
-        new_angle = joint[0] - 0.1
+        new_angle = joint[0] - 0.05
         motion.setAngles("RShoulderRoll", new_angle, 0.2)
         print "1: ShoulderOut"
 
 
     def ElbowIn(self, joint):
-        new_angle = joint[1] + 0.1
+        new_angle = joint[1] + 0.05
         motion.setAngles("RElbowRoll", new_angle, 0.2)
         print "2: ElbowIn"
 
 
 
     def ElbowOut(self, joint):
-        new_angle = joint[1] - 0.1
+        new_angle = joint[1] - 0.05
         motion.setAngles("RElbowRoll", new_angle, 0.2)
         print "3: ElbowOut"
 
 
     def calState(self, joint):
-        a = round(self.joint[0], 1)
-        b = round(self.joint[1], 1)
-        #a0 = 0.211
-        #b0 = 0.833
-        # [0.21932005882263184, 0.8268680572509766]
-        #state_result = int(8 * round((a0 - a) / 0.1) + round((b0 - b) / 0.1) + 1)
+        a = 0.05 * int(round(self.joint[0] / 0.05))
+        b = 0.05 * int(round(self.joint[1] / 0.05))
         state_result = [a, b]
         self.state = np.array(state_result)
         return self.state
@@ -266,13 +262,13 @@ class DQN():
         summary_writer.add_summary(summary_str,self.time_step)
 
         # save network every 1000 iteration
-        if self.time_step % 1000 == 0:
+        if self.time_step % 100 == 0:
             print " "
             print "Save network!"
             print "state_batch: %s" %state_batch
             print "action_batch: %s" %action_batch
             print "reward_batch: %s" %reward_batch
-            print "Q_value: %s" %Q_value
+            print "Q_value: %s" %self.Q_value
             print Q_value_batch
             self.saver.save(self.session, 'saved_networks/' + 'network' + '-dqn', global_step = self.time_step)
 
@@ -329,7 +325,7 @@ def main():
     if (keyboard_in == 'y'):
         pass
 
-    for episode in xrange(EPISODE):
+    '''for episode in xrange(EPISODE):
         print "Train"
         # initialize task
         joints = env.getJoint()
@@ -406,7 +402,7 @@ def main():
                     reward, guide = env.calReward()
                     time.sleep(1)
                     print "action: %s, state: %s, reward: %s, done: %s" %(action,state,reward,done)
-                    total_reward = total_reward + (100 + reward)
+                    total_reward = total_reward + reward
                     print "total_reward: %s" %total_reward
                     if done:
                         RobotInit()
@@ -414,7 +410,7 @@ def main():
             ave_reward = total_reward/TEST
             print 'episode: ',episode,'Evaluation Average Reward:',ave_reward
             if ave_reward >= 2000:
-                break
+                break'''
 
     # save results for uploading
     #env.monitor.start('gym_results/CartPole-v0-experiment-1',force = True)

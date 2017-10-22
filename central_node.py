@@ -19,7 +19,7 @@ from std_msgs.msg import Float32MultiArray
 from rospy_tutorials.msg import Floats
 import math
 
-nao_ip = "10.0.29.2"
+nao_ip = "127.0.0.1"
 port = 9559
 motion = ALProxy("ALMotion", nao_ip, port)
 posture = ALProxy("ALRobotPosture", nao_ip, port)
@@ -85,7 +85,9 @@ class ENV():
         else: 
              self.guide = 0
 
-        self.reward = 10 - (part_out + part_in) * (part_out + part_in) * 10000
+        reward0 = 10 - (part_out + part_in) * (part_out + part_in) * 10000
+        reward_result = (reward0 + 200) / 400
+        self.reward = reward_result
 
 
     def getJoint(self):
@@ -142,8 +144,14 @@ class ENV():
 
 
     def calState(self, joint):
-        a = 0.05 * int(round(self.joint[0] / 0.05))
-        b = 0.05 * int(round(self.joint[1] / 0.05))
+
+        a0 = 0.05 * int(round(self.joint[0] / 0.05))
+        b0 = 0.05 * int(round(self.joint[1] / 0.05))
+
+        # normalization
+        a = (a0 + 1.3265) / 1.6407
+        b = (b0 - 0.0349) / 1.5097
+        
         state_result = [a, b]
         self.state = np.array(state_result)
         return self.state
@@ -325,7 +333,7 @@ def main():
     if (keyboard_in == 'y'):
         pass
 
-    '''for episode in xrange(EPISODE):
+    for episode in xrange(EPISODE):
         print "Train"
         # initialize task
         joints = env.getJoint()
@@ -410,7 +418,7 @@ def main():
             ave_reward = total_reward/TEST
             print 'episode: ',episode,'Evaluation Average Reward:',ave_reward
             if ave_reward >= 2000:
-                break'''
+                break
 
     # save results for uploading
     #env.monitor.start('gym_results/CartPole-v0-experiment-1',force = True)

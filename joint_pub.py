@@ -10,7 +10,8 @@ import roslib; roslib.load_manifest('numpy_tutorial')
 
 from rospy_tutorials.msg import Floats
 
-nao_ip = "10.0.29.2"
+#nao_ip = "10.0.29.2"
+nao_ip = "127.0.0.1"
 port = 9559
 motion = ALProxy("ALMotion", nao_ip, port)
 

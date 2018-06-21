@@ -94,6 +94,8 @@ class ENV():
     def getJoint(self):
         rospy.Subscriber("floats", Floats, self.joint_CB)
         return self.joint
+
+
     def joint_CB(self, data):
         self.joint = data.data
 

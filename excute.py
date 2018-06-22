@@ -17,13 +17,16 @@ from collections import deque
 import roslib; roslib.load_manifest('numpy_tutorial')
 from std_msgs.msg import Float32MultiArray
 from rospy_tutorials.msg import Floats
+from std_msgs.msg import Int32
 import math
 
 #nao_ip = "10.0.29.2"
-nao_ip = "127.0.0.1"
+nao_ip = "169.254.80.21"
+#nao_ip = "127.0.0.1"
 port = 9559
 motion = ALProxy("ALMotion", nao_ip, port)
 posture = ALProxy("ALRobotPosture", nao_ip, port)
+STEP_SIZE = 0.05
 
 def RobotInit():
     names  = ["Body"]
@@ -55,9 +58,17 @@ class ENV():
         self.action_dim = 4
 
 
-    def calReward(self):
+    def cal_ave_reward(self): # ToDO
+        rospy.Subscriber('chatter', Int32, self.reward_CallBack)
+        return self.reward
+
+    def calReward(self): # ToDO
         rospy.Subscriber("force_hand", Float32MultiArray, self.reward_CB)
         return self.reward, self.guide
+
+    def reward_CallBack(self, data):
+        self.reward = data
+
     def reward_CB(self, data):
         cell_sum = 0
         # calculate reward according to skin cell with different weightings
@@ -122,27 +133,37 @@ class ENV():
         else:
             return True
 
+    def RepeatPerfm(self, act_cmd, joint):
+        fun = {
+            '0': self.ShoulderIn,
+            '1': self.ShoulderOut,
+            '2': self.ElbowIn,
+            '3': self.ElbowOut,
+        }[act_cmd]
+        fun(joint)
+
+
     def ShoulderIn(self, joint):
-        new_angle = joint[0] + 0.05
+        new_angle = joint[0] + STEP_SIZE
         motion.setAngles("RShoulderRoll", new_angle, 0.2)
         print "0: ShoulderIn"
 
 
     def ShoulderOut(self, joint):
-        new_angle = joint[0] - 0.05
+        new_angle = joint[0] - STEP_SIZE
         motion.setAngles("RShoulderRoll", new_angle, 0.2)
         print "1: ShoulderOut"
 
 
     def ElbowIn(self, joint):
-        new_angle = joint[1] + 0.05
+        new_angle = joint[1] + STEP_SIZE
         motion.setAngles("RElbowRoll", new_angle, 0.2)
         print "2: ElbowIn"
 
 
 
     def ElbowOut(self, joint):
-        new_angle = joint[1] - 0.05
+        new_angle = joint[1] - STEP_SIZE
         motion.setAngles("RElbowRoll", new_angle, 0.2)
         print "3: ElbowOut"
 
@@ -167,8 +188,8 @@ class ENV():
 GAMMA = 0.9 # discount factor for target Q 
 INITIAL_EPSILON = 0.5 # starting value of epsilon
 FINAL_EPSILON = 0.01 # final value of epsilon
-REPLAY_SIZE = 10000 # experience replay buffer size
-BATCH_SIZE = 32 # size of minibatch
+REPLAY_SIZE = 100000 # experience replay buffer size
+BATCH_SIZE = 30 # size of minibatch
 
 class DQN():
     # DQN Agent
@@ -273,8 +294,8 @@ class DQN():
                 })
         summary_writer.add_summary(summary_str,self.time_step)
 
-        # save network every 1000 iteration
-        if self.time_step % 100 == 0:
+        # save network every 30 iteration
+        if self.time_step % 30 == 0:
             print " "
             print "Save network!"
             print "state_batch: %s" %state_batch
@@ -323,8 +344,8 @@ class DQN():
 
 # ---------------------------------------------------------
 # Hyper Parameters
-EPISODE = 10000 # Episode limitation
-STEP = 300 # Step limitation in an episode
+EPISODE = 100 # Episode limitation
+STEP = 20 # Step limitation in an episode
 TEST = 10 # The number of experiment test every 100 episode
 
 def main():
@@ -337,21 +358,24 @@ def main():
     if (keyboard_in == 'y'):
         pass
 
-    '''for episode in xrange(EPISODE):
+    for episode in xrange(EPISODE):
         print "Train"
         # initialize task
         joints = env.getJoint()
         time.sleep(0.2)
         joints = env.getJoint()
         state = env.calState(joints)
-        guide = 0########################
-        #print joints
-        # Train 
+        guide = 0
+
+
         for step in xrange(STEP):
             print "Episode: %s, Step: %s" %(episode, step)
+            
+            # ------------------guide--------------------- 
             if guide != 0:
                 print "Give a guide:"
-                action_guide = raw_input()
+                action_guide = raw_input() # a very direct guide which should be changed later as a skin feedback
+                                           # which to select a relating direction of action
                 if (action_guide == '0') or (action_guide == '1') or (action_guide == '2') or (action_guide == '3'):
                     pass
                 else:
@@ -361,11 +385,34 @@ def main():
             else:
                 action = agent.egreedy_action(state) # e-greedy action for train
             
-            done = env.ActPerfm(action, joints)
+            action = agent.egreedy_action(state)
             joints = env.getJoint()
             time.sleep(0.2)
             joints = env.getJoint()
+            done = env.ActPerfm(action, joints)
+            print "Did the robot perform this action?"
+            print "0-shoulderin 1-shoulderout 2-elbowin 3-elbowout 9-done correctly"
+            done_flag = raw_input()
+            if (done_flag != 0) or done_flag!=1 or done_flag != 2 or done_flag != 3 or done_flag != 9:
+                print "agian!"
+                done_flag = raw_input()
+            while done_flag != "9":
+                print "0-shoulderin 1-shoulderout 2-elbowin 3-elbowout 9-done correctly"
+                joints = env.getJoint()
+                time.sleep(0.3)
+                joints = env.getJoint()
+                env.RepeatPerfm(done_flag, joints)
+                done_flag = raw_input()
+                if (done_flag != 0) or done_flag!=1 or done_flag != 2 or done_flag != 3 or done_flag != 9:
+                    print "agian!"
+                    done_flag = raw_input()
+
+            joints = env.getJoint()
+            time.sleep(0.3)
+            joints = env.getJoint()
             next_state = env.calState(joints)
+            '''
+            # --------- stop for collecting reward ------------
             print "Skin will collect reward:"
             keyboard_in = raw_input()
             if (keyboard_in == '0'):
@@ -373,18 +420,43 @@ def main():
             else:
                 pass
             time.sleep(0.2)
-            reward, guide = env.calReward()
+            
+            reward, guide = env.calReward() # original reward func need guide info as well, abandon!
             #time.sleep(0.2)
-            print "action: %s, state: %s, reward: %s, guide: %s(1: move out | -1: move in), done: %s" %(action,state,reward,guide,done)
+            # print "action: %s, state: %s, reward: %s, guide: %s(1: move out | -1: move in), done: %s" %(action,state,reward,guide,done)
             #time.sleep(1)
             # next_state,reward,done,_ = env.step(action) # these three results can be calculate independently
             # Define reward for agent
             # reward_agent = -1 if done else 0.1
+            '''
+            '''
+            state_buffer.append(state)
+            action_buffer.append(action)
+            next_state_buffer.append(next_state)
+            done_buffer.append(done)
+            '''
+            print "Skin will collect reward: good: 9 | bad: 0 "
+            keyboard_in = raw_input()
+            if (keyboard_in == '0'):
+                reward = -10
+                guide = 1
+            else:
+                reward = 10
+                guide = 0
+            print "reward already collected!"
+            time.sleep(0.2)
             agent.perceive(state,int(action),reward,next_state,done)
             state = next_state
             if done:
                 RobotInit() # everytime when a episode is finishing, go back to initial position
                 break
+        
+        
+        
+        
+        
+        
+        '''
         # Test every 100 episodes
         if (episode % 100 == 0) and (episode != 0):
             print " "
@@ -422,10 +494,12 @@ def main():
             ave_reward = total_reward/TEST
             print 'episode: ',episode,'Evaluation Average Reward:',ave_reward
             if ave_reward >= 2000:
-                break'''
+                break
+            '''
 
     # save results for uploading
     #env.monitor.start('gym_results/CartPole-v0-experiment-1',force = True)
+    '''
     for i in xrange(100):
         print " "
         print "Uploading!"
@@ -454,6 +528,7 @@ def main():
                 RobotInit()
                 break
     # env.monitor.close() 
+    '''
 
 if __name__ == '__main__':
     rospy.init_node('central_node', anonymous = False)

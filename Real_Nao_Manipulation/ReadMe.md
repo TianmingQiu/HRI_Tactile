@@ -34,3 +34,6 @@ Rosrun the python file nao_train
 - *nao_train.py* is for the training
 - */trajectory_simulation* is for the trajectory visualization with forward kinematic.
 
+
+### Install Choregraphe(official website provide the register code) and VREP for simulation.
+

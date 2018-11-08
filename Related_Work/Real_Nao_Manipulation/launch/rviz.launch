@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+<launch>
+	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find tum_ics_skin_tutorials_fiad)/launch/rvizConfigs/visualize_skin_patch_260.rviz"/>
+</launch>

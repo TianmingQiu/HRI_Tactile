@@ -1,0 +1,165 @@
+###############################################################################
+#
+#		How use the services of the skin driver
+#
+###############################################################################
+
+
+# find the services of the skin driver (there might be several in different namespaces)
+rosservice list
+===============================================================================
+/createSkinCellDataPub
+/enableSkinCellDataPub
+/getSkinCellIds
+/getSkinCellNeighbors
+/setSkinCellLedColor
+===============================================================================
+
+
+# get a list of ids of all the connected skin cells
+rosservice call /getSkinCellIds
+===============================================================================
+cellId: [1, 2, 7, 3, 5, 6, 4]
+ok: True
+===============================================================================
+
+
+# set the color of skin cell 1 to red
+rosservice call /setSkinCellLedColor "color:
+- cellId: 1
+  r: 255
+  g: 0
+  b: 0" 
+===============================================================================
+ok: True 
+===============================================================================
+
+
+# set the color of all skin cells to green
+rosservice call /setSkinCellLedColor "color:
+- cellId: 16383
+  r: 0
+  g: 255
+  b: 0" 
+===============================================================================
+ok: True 
+===============================================================================
+
+
+# set the color of several skin cells
+rosservice call /setSkinCellLedColor "color:
+- cellId: 1
+  r: 0
+  g: 0
+  b: 255
+- cellId: 2
+  r: 255
+  g: 0
+  b: 0" 
+===============================================================================
+ok: True 
+===============================================================================
+
+
+# get the sensor data of skin cell 1
+
+# 1) create a topic to publish the data of skin cell 1 in topic 'skinTest1'
+rosservice call /createSkinCellDataPub "topicName: 'skinTest1'
+cellId:
+- 1"
+===============================================================================
+ok: True 
+===============================================================================
+
+rostopic list
+===============================================================================
+/skinTest1
+===============================================================================
+
+# 2) enable the publisher to publish data in the topic 'skinTest1'
+rosservice call /enableSkinCellDataPub "topicName: 'skinTest1'
+enable: true"
+===============================================================================
+ok: True 
+===============================================================================
+
+
+# 3) echo topic
+rostopic echo /skinTest1
+===============================================================================
+data: 
+  - 
+    cellId: 1
+    ts: 64180003845
+    prox: [0.0]
+    force: [0.0009765625, 0.0009765625, 0.0]
+    acc: [0.01953125, 0.03515625, 1.01171875]
+    temp: [31.5, 0.0]
+===============================================================================
+
+
+
+# get the sensor data of several skin cells
+# NOTE: the array CAN contain several skin data items, but NOT necessarily, see
+	output of step 3) 
+
+# 1) create a topic to publish the data of skin cell 1 in topic 'skinTest2'
+rosservice call /createSkinCellDataPub "topicName: 'skinTest2'
+cellId:
+- 1
+- 2
+- 3
+- 4"
+===============================================================================
+ok: True 
+===============================================================================
+
+
+# 2) enable the publisher to publish data in the topic 'skinTest1'
+rosservice call /enableSkinCellDataPub "topicName: 'skinTest2'
+enable: true"
+===============================================================================
+ok: True 
+===============================================================================
+
+
+# 3) echo topic
+rostopic echo /skinTest2
+===============================================================================
+---
+data: 
+  - 
+    cellId: 1
+    ts: 240987230050
+    prox: [4.57763671875e-05]
+    force: [0.0, 0.0009765625, 0.0]
+    acc: [0.0390625, 0.03515625, 1.01171875]
+    temp: [32.0, 0.0]
+---
+data: 
+  - 
+    cellId: 4
+    ts: 240989432087
+    prox: [0.00152587890625]
+    force: [0.0009765625, 0.0, 0.0]
+    acc: [0.03125, -0.0390625, 1.0234375]
+    temp: [30.5, 0.0]
+  - 
+    cellId: 2
+    ts: 240989455123
+    prox: [0.0]
+    force: [0.0009765625, 0.0009765625, 0.0]
+    acc: [-0.0, 0.06640625, 1.07421875]
+    temp: [29.0, 0.0]
+---
+data: 
+  - 
+    cellId: 3
+    ts: 240989947492
+    prox: [0.006866455078125]
+    force: [0.0, 0.0009765625, 0.001953125]
+    acc: [-0.0546875, 0.0234375, 0.99609375]
+    temp: [29.5, 0.0]
+---
+===============================================================================
+

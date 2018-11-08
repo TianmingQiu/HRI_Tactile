@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<launch>
+	<arg name="CONFIG_PATH" default="$(find tum_ics_ur5_configs_fiad)/parameters/SkinConfigs/delft"/>
+
+	<!--group ns="skin">
+	<group ns="viz"-->
+
+	<node name="load_and_view_patches_test_fiad1" 
+		pkg="tum_ics_skin_tutorials_fiad" 
+		type="load_and_view_patches_tut_fiad" 
+		args="$(arg CONFIG_PATH)" output="screen">
+
+		<rosparam file="$(find tum_ics_skin_tutorials_fiad)/launch/configs/patch_list.yaml" command="load" />	
+
+	</node>
+
+	<!--/group>
+	</group-->
+
+</launch>

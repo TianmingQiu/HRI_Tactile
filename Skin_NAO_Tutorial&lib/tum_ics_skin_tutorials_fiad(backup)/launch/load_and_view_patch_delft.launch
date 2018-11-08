@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<launch>
+	<arg name="PATCH_ID" default="0"/> <!-- patchId=0 <=> first patch in file /-->
+	<arg name="CONFIG_PATH" default="$(find tum_ics_ur5_configs_fiad)/parameters/SkinConfigs/delft"/>
+	<arg name="FILE_DIALOG" default="true"/>  <!-- if only path is specified: always open file dialog /-->
+
+	<node name="load_and_view_patch_test_fiad1" 
+		pkg="tum_ics_skin_tutorials_fiad" 
+		type="load_and_view_patch_test_fiad" 
+		args="$(arg CONFIG_PATH) $(arg PATCH_ID) $(arg FILE_DIALOG)" output="screen"/>
+
+</launch>

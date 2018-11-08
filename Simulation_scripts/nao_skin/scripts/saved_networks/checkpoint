@@ -1,6 +1,0 @@
-model_checkpoint_path: "network-dqn-150"
-all_model_checkpoint_paths: "network-dqn-30"
-all_model_checkpoint_paths: "network-dqn-60"
-all_model_checkpoint_paths: "network-dqn-90"
-all_model_checkpoint_paths: "network-dqn-120"
-all_model_checkpoint_paths: "network-dqn-150"

@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<launch>
+
+<!-- Patch 1-->
+	<arg name="PATCH_ID_1" default="1"/>
+	<arg name="NAMESPACE_1" default="patch1"/>
+	<arg name="CONFIG_FILE_1" default="$(find tum_skin_tests_fiad)/skinConfigs/patch1.ini"/>
+	<!--arg name="TF_PARENT_1" default="skin_world1"/  $(arg TF_PARENT_1)-->  
+
+	<node name="sensor_data_right_arm_upper" pkg="tum_skin_tests_fiad" type="right_arm_upper" args= "$(arg PATCH_ID_1) $(arg NAMESPACE_1) $(arg CONFIG_FILE_1) " output="screen"/>
+
+
+<!-- Patch 2-->
+	<arg name="PATCH_ID_2" default="2"/>
+	<arg name="NAMESPACE_2" default="patch2"/>
+	<arg name="CONFIG_FILE_2" default="$(find tum_skin_tests_fiad)/skinConfigs/patch2.ini"/>
+	<!--arg name="TF_PARENT_2" default="skin_world2"/  $(arg TF_PARENT_2)-->  
+
+	<node name="sensor_data_left_arm_upper" pkg="tum_skin_tests_fiad" type="left_arm_upper" args= "$(arg PATCH_ID_2) $(arg NAMESPACE_2) $(arg CONFIG_FILE_2) " output="screen"/>   
+
+</launch>

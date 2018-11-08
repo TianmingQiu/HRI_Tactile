@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<launch>
+
+<!-- Patch 1-->
+	<arg name="PATCH_ID_1" default="1"/>
+	<arg name="NAMESPACE_1" default="patch1"/>
+	<arg name="CONFIG_FILE_1" default="$(find tum_skin_tests_fiad)/skinConfigs/patch1.ini"/>
+	<!--arg name="TF_PARENT_1" default="skin_world1"/  $(arg TF_PARENT_1)-->  
+
+	<node name="sensor_data_right_arm" pkg="tum_skin_tests_fiad" type="right_arm" args= "$(arg PATCH_ID_1) $(arg NAMESPACE_1) $(arg CONFIG_FILE_1) " output="screen"/>
+
+
+<!-- Patch 2-->
+	<arg name="PATCH_ID_2" default="2"/>
+	<arg name="NAMESPACE_2" default="patch2"/>
+	<arg name="CONFIG_FILE_2" default="$(find tum_skin_tests_fiad)/skinConfigs/patch2.ini"/>
+	<!--arg name="TF_PARENT_2" default="skin_world2"/  $(arg TF_PARENT_2)-->  
+
+	<node name="sensor_data_front_right_leg" pkg="tum_skin_tests_fiad" type="front_right_leg" args= "$(arg PATCH_ID_2) $(arg NAMESPACE_2) $(arg CONFIG_FILE_2) " output="screen"/>   
+
+
+<!-- Patch 3-->
+	<arg name="PATCH_ID_3" default="3"/>
+	<arg name="NAMESPACE_3" default="patch3"/>
+	<arg name="CONFIG_FILE_3" default="$(find tum_skin_tests_fiad)/skinConfigs/patch3.ini"/>
+	<node name="sensor_data_back_left_leg" pkg="tum_skin_tests_fiad" type="back_left_leg" args= "$(arg PATCH_ID_3) $(arg NAMESPACE_3) $(arg CONFIG_FILE_3) " output="screen"/> 
+
+<!-- Patch 4-->
+	<arg name="PATCH_ID_4" default="4"/>
+	<arg name="NAMESPACE_4" default="patch4"/>
+	<arg name="CONFIG_FILE_4" default="$(find tum_skin_tests_fiad)/skinConfigs/patch4.ini"/>
+	<node name="sensor_data_left_arm" pkg="tum_skin_tests_fiad" type="left_arm" args= "$(arg PATCH_ID_4) $(arg NAMESPACE_4) $(arg CONFIG_FILE_4) " output="screen"/>
+</launch>

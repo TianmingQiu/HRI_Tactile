@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<launch>
+
+<!-- Patch 1-->
+	<arg name="PATCH_ID_1" default="1"/>
+	<arg name="NAMESPACE_1" default="patch1"/>
+	<arg name="CONFIG_FILE_1" default="$(find tum_skin_tests_fiad)/skinConfigs/patch1.ini"/>
+	<!--arg name="TF_PARENT_1" default="skin_world1"/  $(arg TF_PARENT_1)-->  
+
+	<node name="sensor_data_hand" pkg="tum_skin_tests_fiad" type="hand" args= "$(arg PATCH_ID_1) $(arg NAMESPACE_1) $(arg CONFIG_FILE_1) " output="screen"/>
+
+
+
+
+</launch>

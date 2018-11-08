@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<launch>
+	<!--arg name="INTF_TYPE" default="TSU"/-->
+	<arg name="INTF_TYPE" default="FTDI"/>
+	<arg name="FTDI_SERIAL" default="FTYPY7DO"/>	
+	<arg name="VERSION" default="2"/>
+	<arg name="UPDATE_RATE" default="250"/>
+
+	<node name="tum_skin_driver_fiad_arm" pkg="tum_skin_driver_fiad" type="tum_skin_driver_fiad" args="$(arg INTF_TYPE) $(arg FTDI_SERIAL) $(arg VERSION) $(arg UPDATE_RATE)" output="screen"/>
+
+</launch>

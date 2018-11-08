@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<launch>
+	
+	<arg name="PATCH_ID" default="0"/> <!-- This is the id of the desired patch. If you set it to "0" then it will load the first patch in the config file what ever id this patch has!/-->
+	<arg name="CONFIG_PATH" /><!--Default PATH for the skin config dialog (The path were you saved the config file created previously with roslaunch tum_ics_skin_full_config_fiad full_config.launch)-->
+	<arg name="FILE_DIALOG" default="true"/>  <!-- if only path is specified: always open file dialog /-->
+
+	<node name="load_and_view_patch_test_fiad1" 
+		pkg="skin_nao" 
+		type="load_and_view_patch_tut_fiad" 
+		args="$(arg CONFIG_PATH) $(arg PATCH_ID) $(arg FILE_DIALOG)" output="screen"/>
+
+</launch>

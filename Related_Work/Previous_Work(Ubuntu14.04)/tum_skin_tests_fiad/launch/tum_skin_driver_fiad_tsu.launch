@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<launch>
+	<arg name="INTF_TYPE" default="TSU"/>
+        <arg name="IP_ADDRESS" default="192.168.0.10"/>
+	<arg name="PORT" default="1337"/>
+	<arg name="VERSION" default="1"/>
+	<arg name="UPDATE_RATE" default="250"/>
+
+	<node name="tum_skin_driver_fiad_arm" pkg="tum_skin_driver_fiad" type="tum_skin_driver_fiad" args="$(arg INTF_TYPE) $(arg IP_ADDRESS) $(arg PORT) $(arg VERSION) $(arg UPDATE_RATE)" output="screen"/>
+
+</launch>

@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<launch>
+   <arg name="PATCH_ID" default="1"/>
+   <arg name="NAMESPACE" default="patch1"/>
+   <arg name="CONFIG_FILE" default="$(find tum_skin_tests_fiad)/skinConfigs/patch1.ini"/>
+
+   <!--node name="rviz" pkg="rviz" type="rviz" args="-d $(find tum_skin_tests_fiad)/launch/rvizConfigs/visualize_skin_patch_260.rviz"/-->
+   <node name="viz_test1" pkg="tum_skin_tests_fiad" type="viz_test" args= "$(arg PATCH_ID) $(arg NAMESPACE) $(arg CONFIG_FILE)" output="screen"/>
+</launch>

@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<package>
+  <name>skin_nao</name>
+  <version>0.0.0</version>
+  <description>The skin tutorials fiad package</description>
+
+  <author email="florian.bergner@tum.de">Florian Bergner</author>
+  <maintainer email="florian.bergner@tum.de">Florian Bergner</maintainer>
+  <url type="website">http://ics.ei.tum.de</url>
+  <license>BSD</license>
+
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>roscpp</build_depend>
+  <build_depend>tum_ics_params</build_depend>
+  <build_depend>tum_ics_tfs</build_depend>     
+  <build_depend>tum_ics_skin_msgs</build_depend>
+  <build_depend>tum_ics_skin_bridge</build_depend>
+  <build_depend>tum_ics_skin_descr</build_depend>
+
+  <run_depend>roscpp</run_depend>
+  <run_depend>tum_ics_params</run_depend>
+  <run_depend>tum_ics_tfs</run_depend>
+  <run_depend>tum_ics_skin_msgs</run_depend>	
+  <run_depend>tum_ics_skin_bridge</run_depend>
+  <run_depend>tum_ics_skin_descr</run_depend>
+
+  <!-- The export tag contains other, unspecified, tags -->
+  <export>
+    <!-- Other tools can request additional information be placed here -->
+
+  </export>
+</package>

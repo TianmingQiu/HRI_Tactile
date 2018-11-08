@@ -1,0 +1,56 @@
+#NOTE TO ADVISORS: 
+#	Please prepare the patch correctly before handle it to the students. If you don't know what this means ASK!
+#NODE 1 Connect the skin to the PC
+#a) TSU
+#b) FTDI
+#For case a)
+roslaunch tum_ics_skin_driver_fiad skin_driver_tsu.launch
+
+#For case b)
+roslaunch tum_ics_skin_driver_fiad skin_driver_ftdi.launch FTDI_SERIAL:=FTYZ2YG4
+#NOTE: If you don't have the serial number, then run the file without the serial number it will fail, but in the screen you will find the correct information of the FTDI, e.g. 
+#FTDI device info:
+#node[0]:
+#      opened              = 0
+#      high speed device   = 1
+#      type                = 232H
+#      locId               = 264
+#      serialNumber        = FTYZ2YG4 << This is the correct serial number!!!
+#      description         = SkinCellAdapter
+#      ftHandle            = 0x0
+
+
+#NODE 2 You need to create a skin config file, which basically containts the structural information of the patch. 
+#In order to create this config file run:
+roslaunch tum_ics_skin_full_config_fiad full_config.launch
+#This will open a window divided in 3 different steps
+#Step 1:
+#	If you don't need a namespace use "/"
+#	2 poses is ok as default
+#	Put the skin in the first pose, and press "Capture"
+#	Do this process as many times as indicated in "Desired Number of Poses"
+#Step 2:
+#	Please verify that the skinpatch shown in the display is similar to the real skin patch 
+#	The GUI offers different configuration options, but for this simple case you can directly press "save"
+#	Select the path and the name for the skin config file. This file will be needed to use the skin in your application (see NODE 3) 
+#Step 3:
+#	You don't need to do anything here. 
+#Close the main window
+
+#NODE 3
+
+# This will open a dialog window where you can select your skin config file
+
+#NODE 4
+#You can inmediatly check whether the node is working, because will create a publisher with a topic named as the patch name. This topic contains all the information of all the cells in the patch, simply run:
+rostopic list
+#Check the topic name, it should be something like: /patchX
+rostopic echo /patchX 
+#Also if you want to visualize the patch in RViz you can run:
+roslaunch tum_ics_skin_tutorials_fiad rviz.launch
+
+#Now to integrate the patch into your application, take a look on the file: tum_ics_skin_fiad/tum_ics_skin_tutorials_fiad/src/Applications/main_load_and_view_patch_tut_fiad.cpp
+#There you will find an example on how to use the skinpatch API
+
+
+

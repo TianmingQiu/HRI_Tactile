@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<launch>
+  
+  
+  
+	<!--arg name="INTF_TYPE" default="TSU"/-->
+	<arg name="INTF_TYPE" default="FTDI"/>
+	<arg name="FTDI_SERIAL" default="FTYPY7JC"/>	
+	<arg name="VERSION" default="2"/>
+	<arg name="UPDATE_RATE" default="250"/>
+	
+	<arg name="PATCH_ID" default="1"/>
+	<arg name="NAMESPACE" default="patch1"/>
+	<arg name="CONFIG_FILE" default="$(find tum_skin_tests_fiad)/skinConfigs/patch1.ini"/>
+
+	
+	<!--Start Driver-->
+	<node name="tum_skin_driver_fiad_arm" pkg="tum_skin_driver_fiad" type="tum_skin_driver_fiad" args="$(arg INTF_TYPE) $(arg FTDI_SERIAL) $(arg VERSION) $(arg UPDATE_RATE)" output="screen"/>
+	
+	
+	<node name="viz_test1" pkg="tum_skin_tests_fiad" type="viz_test" args= "$(arg PATCH_ID) $(arg NAMESPACE) $(arg CONFIG_FILE)" output="screen"/>
+
+</launch>
